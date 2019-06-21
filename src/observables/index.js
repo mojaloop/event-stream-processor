@@ -25,7 +25,6 @@
 'use strict'
 
 module.exports = {
-  actionObservable: require('./actions').actionObservable,
   fluentdObservable: require('./fluentd-logger').FluentdLoggerObservable,
   apmTracerObservable: require('./apmTracerObservable').apmTracerObservable
 }

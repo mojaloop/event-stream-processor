@@ -1,8 +1,8 @@
-const Agent = require('elastic-apm-node')
-const Tracer = require('elastic-apm-node-opentracing')
+const Agent = require('@mojaloop/elastic-apm-node')
+const Tracer = require('@mojaloop/elastic-apm-node-opentracing')
 
 const agent = (function () {
-  let self = Agent.start()
+  let self = Agent.start({serviceName: 'event-stream-processor'})
   this.agent = self
   return this
 })()
