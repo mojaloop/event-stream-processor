@@ -1,0 +1,70 @@
+{
+  "efk": {
+    "host": "localhost",
+    "port": 24224,
+    "timeout": 3.0,
+    "reconnectInterval": 600
+  },
+  "PORT": 3081,
+  "KAFKA": {
+    "TOPIC_TEMPLATES": {
+      "GENERAL_TOPIC_TEMPLATE": {
+        "TEMPLATE": "topic-{{functionality}}",
+        "REGEX": "topic-(.*)"
+      }
+    },
+    "PRODUCER": {
+      "EVENT": {
+        "config": {
+          "options": {
+            "messageCharset": "utf8"
+          },
+          "rdkafkaConf": {
+            "metadata.broker.list": "localhost:9092",
+            "client.id": "es-prod-event",
+            "event_cb": true,
+            "dr_cb": true,
+            "socket.keepalive.enable": true,
+            "queue.buffering.max.messages": 10000000
+          },
+          "topicConf": {
+            "request.required.acks": "all"
+          }
+        }
+      }
+    },
+    "CONSUMER": {
+      "EVENT": {
+        "config": {
+          "options": {
+            "mode": 2,
+            "batchSize": 1,
+            "recursiveTimeout": 100,
+            "messageCharset": "utf8",
+            "messageAsJSON": true,
+            "sync": true,
+            "consumeTimeout": 1000
+          },
+          "rdkafkaConf": {
+            "client.id": "cep-event-mediation",
+            "group.id": "cep-event-mediation-group",
+            "metadata.broker.list": "localhost:9092",
+            "socket.blocking.max.ms": 1,
+            "fetch.wait.max.ms": 1,
+            "fetch.error.backoff.ms": 1,
+            "queue.buffering.max.ms": 1,
+            "broker.version.fallback": "0.10.1.0",
+            "api.version.request": true,
+            "enable.auto.commit": false,
+            "auto.commit.interval.ms": 200,
+            "socket.keepalive.enable": true,
+            "socket.max.fails": 1
+          },
+          "topicConf": {
+            "auto.offset.reset": "earliest"
+          }
+        }
+      }
+    }
+  }
+}
