@@ -62,11 +62,11 @@ services:
       - setup.kibana.host="kibana:5601"
       - setup.template.enabled=true
       - logging.to_files=false
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
+    # depends_on:
+    #   elasticsearch:
+    #     condition: service_healthy
+    #   kibana:
+    #     condition: service_healthy
 
 
 volumes:

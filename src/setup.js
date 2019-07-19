@@ -68,7 +68,11 @@ const setup = async () => {
   const sharedMessageObservable = topicObservable.pipe(share())
 
   sharedMessageObservable.subscribe(async props => {
-    Observables.fluentdObservable(props).subscribe(v => console.log(v))
+    Observables.fluentdObservable(props).subscribe({
+      next: v => Logger.info(v),
+      error: (e) => Logger.error(e),
+      completed: () => Logger.info('fluentd log completed')
+    })
   })
 
   const tracingObservable = sharedMessageObservable.pipe(

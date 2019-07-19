@@ -1,9 +1,14 @@
 {
   "efk": {
-    "host": "localhost",
+    "host": "dev1-fluentd.mojaloop.live",
     "port": 24224,
     "timeout": 3.0,
-    "reconnectInterval": 600
+    "reconnectInterval": 600,
+    "requireAckResponse": true
+  },
+  "apm": {
+    "serviceName": "event-stream-processor",
+    "serverUrl": "http://dev1-apm.mojaloop.live:80"
   },
   "PORT": 3082,
   "KAFKA": {

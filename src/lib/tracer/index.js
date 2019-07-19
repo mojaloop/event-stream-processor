@@ -1,8 +1,12 @@
 const Agent = require('@mojaloop/elastic-apm-node')
 const Tracer = require('@mojaloop/elastic-apm-node-opentracing')
+const Config = require('../config')
+const configuration = Config.util.toObject()
+
+
 
 const agent = (function () {
-  let self = Agent.start({serviceName: 'event-stream-processor'})
+  let self = Agent.start(configuration.apm)
   this.agent = self
   return this
 })()
