@@ -1,6 +1,6 @@
 const Rx = require('rxjs')
 const logger = require('../lib/efk').logger
-const initLogger = require('../lib/efk').initLogger
+// const initLogger = require('../lib/efk').initLogger
 
 const Config = require('../lib/config')
 
