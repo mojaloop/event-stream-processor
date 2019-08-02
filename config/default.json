@@ -4,7 +4,8 @@
     "port": 24224,
     "timeout": 3.0,
     "reconnectInterval": 600,
-    "requireAckResponse": true
+    "requireAckResponse": true,
+    "namespace": "logstash"
   },
   "apm": {
     "serviceName": "event-stream-processor",

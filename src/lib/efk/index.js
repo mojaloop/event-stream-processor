@@ -1,12 +1,14 @@
 const logger = require('fluent-logger')
 
-module.exports.initLogger = (prefix, options) => {
+module.exports.initLogger = async (prefix, options) => {
   logger.configure(prefix, options)
-  logger.on('error', (error) => {
-    console.log(error)
+
+  logger.on('connect', () => {
+    Promise.resolve({ status: 'succes' })
   })
-  logger.on('connect', (v) => {
-    console.log('connected!' + v)
+
+  logger.on('error', (error) => {
+    Promise.reject(error)
   })
 }
 

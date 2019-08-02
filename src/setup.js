@@ -34,14 +34,15 @@ const Logger = require('@mojaloop/central-services-shared').Logger
 const Rx = require('rxjs')
 const { share, filter, flatMap } = require('rxjs/operators')
 const createHealtcheck = require('healthcheck-server')
-const Observables = require('./observables')
 const Config = require('./lib/config')
 const { initLogger } = require('./lib/efk')
-
 const configuration = Config.util.toObject()
+// const { initTracer } = require('./lib/tracer')
+const Observables = require('./observables')
 
 const setup = async () => {
-  initLogger('fluentd.test', configuration.efk)
+  await initLogger(configuration.efk.namespace, configuration.efk)
+  // await initTracer(configuration.apm)
   await Consumer.registerEventHandler()
   const topicName = Utility.transformGeneralTopicName(Enums.eventType.EVENT)
   const consumer = Consumer.getConsumer(topicName)
@@ -85,8 +86,8 @@ const setup = async () => {
         Logger.info(spans[span].context())
       }
     },
-    error: e => console.error(e),
-    completed: () => console.log('trace info sent')
+    error: (e) => Logger.error(e),
+    completed: () => Logger.info('trace info sent')
   })
 }
 

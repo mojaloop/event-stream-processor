@@ -17,8 +17,9 @@ const apmTracerObservable = ({ message }) => {
       : new TraceParent(Buffer.concat([version, traceIdBuff, spanIdBuff, flags]))
     let span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp) }, context)
     tracer.startSpan()
-    span.setTag('payload', message.value.content.payload)
-    span.setTag('messageId', message.value.id)
+// the tags should be set by event sdk and just reassigned here if necessery
+    // span.setTag('payload', message.value.content.payload)
+    // span.setTag('transactionId', message.value.id)
     span.finish(Date.parse(finishTimestamp))
     observable.next({ span })
   })
