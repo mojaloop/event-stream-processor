@@ -6,7 +6,7 @@ const { tracer } = require('../lib/tracer')
 const apmTracerObservable = ({ message }) => {
   return Rx.Observable.create(observable => {
     const { service, traceId, parentSpanId, spanId, startTimestamp, finishTimestamp, flags, tags } = message.value.metadata.trace
-    const { status, code, description } = message.value.metadata.state
+    const { status, code, description } = message.value.metadata.event.state
     const version = Buffer.alloc(1).fill(0)
     const flagsBuffer = Buffer.alloc(1).fill(flags | 0x01)
     const traceIdBuff = Buffer.from(traceId, 'hex')
