@@ -25,7 +25,7 @@ const apmTracerObservable = ({ message }) => {
     if (status === 'failed') {  // TODO add the enums from EventSDK
       span.setTag('error', true)
       !!code && span.setTag('errorCode', code)
-      !!description && span.setTag('errorDescription', description) 
+      !!description && span.setTag('errorDescription', description)
       !!description && span.log({
         event: 'error',
         'error.object': description
