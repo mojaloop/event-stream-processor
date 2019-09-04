@@ -69,10 +69,15 @@ const setup = async () => {
   const sharedMessageObservable = topicObservable.pipe(share())
 
   sharedMessageObservable.subscribe(async props => {
-    Observables.fluentdObservable(props).subscribe({
+    // Observables.fluentdObservable(props).subscribe({
+    //   next: v => Logger.info(v),
+    //   error: (e) => Logger.error(e),
+    //   completed: () => Logger.info('fluentd log completed')
+    // })
+    Observables.elasticsearchClientObservable(props).subscribe({
       next: v => Logger.info(v),
       error: (e) => Logger.error(e),
-      completed: () => Logger.info('fluentd log completed')
+      completed: () => Logger.info('elastic API log completed')
     })
   })
 

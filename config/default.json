@@ -5,7 +5,11 @@
     "timeout": 3.0,
     "reconnectInterval": 600,
     "requireAckResponse": true,
-    "namespace": "logstash"
+    "namespace": "newstash"
+  },
+  "efkClient": {
+    "host": "dev1-elasticsearch.mojaloop.live",
+    "log": "trace"
   },
   "apm": {
     "serviceName": "event-stream-processor",
