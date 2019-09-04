@@ -6,7 +6,6 @@ const elasticsearchClientObservable = ({ message }) => {
     try {
       await efkClient.client.index({
         index: 'mojaloop',
-        type: 'mytype',
         body: message.value
       })
       observable.complete()
