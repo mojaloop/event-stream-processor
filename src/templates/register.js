@@ -62,7 +62,7 @@ const registerMojaloopTemplate = async () => {
     body: templateMojaloop
   })
 
-    Logger.debug(`template create result=${JSON.stringify(resultTemplate)}`)
+  Logger.debug(`template create result=${JSON.stringify(resultTemplate)}`)
 }
 
 registerMojaloopTemplate()
