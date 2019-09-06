@@ -49,7 +49,7 @@ const client = new elasticsearch.Client({
  */
 const registerMojaloopTemplate = async () => {
   const resultPing = await client.ping({
-        // ping usually has a 3000ms timeout
+    // ping usually has a 3000ms timeout
     requestTimeout: 1000
   })
 

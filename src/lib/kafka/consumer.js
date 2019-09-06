@@ -32,7 +32,7 @@ const Consumer = require('@mojaloop/central-services-stream').Kafka.Consumer
 const Logger = require('@mojaloop/central-services-shared').Logger
 const Utility = require('./util')
 const Enum = require('../enum')
-let listOfConsumers = {}
+const listOfConsumers = {}
 
 /**
  * @function isConsumerAutoCommitEnabled
@@ -84,7 +84,7 @@ const createHandler = async (topicName, config) => {
       Logger.info(`CreateHandle::connect - successful connected to topics: [${topicName}]`)
       await consumer.consume()
       if (Array.isArray(topicName)) {
-        for (let topic of topicName) { // NOT OK
+        for (const topic of topicName) { // NOT OK
           listOfConsumers[topic] = {
             consumer: consumer,
             autoCommitEnabled: autoCommitEnabled

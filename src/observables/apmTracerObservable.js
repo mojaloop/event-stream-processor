@@ -18,18 +18,18 @@ const apmTracerObservable = ({ message }) => {
     const context = parentSpanIdBuff
       ? new TraceParent(Buffer.concat([version, traceIdBuff, spanIdBuff, flagsBuffer, parentSpanIdBuff]))
       : new TraceParent(Buffer.concat([version, traceIdBuff, spanIdBuff, flagsBuffer]))
-    let span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp) }, context)
+    const span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp) }, context)
     if (tags) {
-      for (let [key, value] of Object.entries(tags)) {
+      for (const [key, value] of Object.entries(tags)) {
         span.setTag(key, value)
       }
     }
-    if (status === 'failed') {  // TODO add the enums from EventSDK
+    if (status === 'failed') { // TODO add the enums from EventSDK
       span.setTag('error', true)
       !!code && span.setTag('errorCode', code)
       !!description && span.setTag('errorDescription', `error code: ${code} :: description: ${description}`)
       if (!message.value.content.error) {
-        let passedError = message.value.content.payload ? new Error(message.value.content.payload) : Object.assign(new Error(description), message.value.content)
+        const passedError = message.value.content.payload ? new Error(message.value.content.payload) : Object.assign(new Error(description), message.value.content)
         span.log({
           event: 'error',
           'error.object': passedError

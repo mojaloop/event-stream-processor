@@ -20,7 +20,7 @@ const elasticsearch = require('elasticsearch')
 
 const elasticSearchClient = (async function () {
   try {
-    let self = new elasticsearch.Client({
+    const self = new elasticsearch.Client({
       host: configuration.efkClient.host,
       log: configuration.efkClient.log
     })
