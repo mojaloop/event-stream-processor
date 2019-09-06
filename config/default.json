@@ -10,7 +10,10 @@
   "efkClient": {
     "host": "dev1-elasticsearch.mojaloop.live",
     "log": "trace",
-    "indexTemplate": "{{index}}-{{date}}"
+    "index": {
+      "name": "mojaloop",
+      "template": "{{index}}-{{date}}"
+    }
   },
   "apm": {
     "serviceName": "event-stream-processor",
