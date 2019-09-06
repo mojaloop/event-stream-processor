@@ -57,6 +57,7 @@ const elasticsearch = require('elasticsearch')
 const ElasticSearchClient = (() => {
   let instance
   let index
+  let currentDate
   const createInstance = async () => {
     try {
       const client = new elasticsearch.Client({
@@ -77,9 +78,11 @@ const ElasticSearchClient = (() => {
 
   return {
     getIndex: () => {
-      if (!index) {
+      const nowDate = Moment()
+      if (!index || nowDate.diff(currentDate, 'days') > 0) {
         const indexConfig = configuration.efkClient.index
-        const dateString = Moment().format('YYYY.MM.DD')
+        currentDate = nowDate
+        const dateString = currentDate.format('YYYY.MM.DD')
         index = Mustache.render(indexConfig.template, {
           index: indexConfig.name,
           date: dateString
