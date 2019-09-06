@@ -89,10 +89,14 @@ const generalTopicTemplate = (functionality) => {
  * @returns {string} - Returns topic name to be created, throws error if failure occurs
  */
 const transformGeneralTopicName = (functionality) => {
-  if (Enum.topicMap[functionality] && Enum.topicMap[functionality]) {
-    return generalTopicTemplate(Enum.topicMap[functionality].functionality)
+  try {
+    if (Enum.topicMap[functionality] && Enum.topicMap[functionality]) {
+      return generalTopicTemplate(Enum.topicMap[functionality].functionality)
+    }
+    return generalTopicTemplate(functionality)
+  } catch (e) {
+    throw e
   }
-  return generalTopicTemplate(functionality)
 }
 
 /**
@@ -159,7 +163,7 @@ const produceGeneralMessage = async (functionality, message, key, partition) => 
     functionalityMapped = Enum.topicMap[functionality].functionality
   }
   Logger.info(`topicConf: ${JSON.stringify(createGeneralTopicConf(functionalityMapped, key, partition))}`)
-  const result = await Kafka.Producer.produceMessage(message,
+  let result = await Kafka.Producer.produceMessage(message,
     createGeneralTopicConf(functionalityMapped, key, partition),
     getKafkaConfig(ENUMS.PRODUCER, functionalityMapped.toUpperCase()))
   return result

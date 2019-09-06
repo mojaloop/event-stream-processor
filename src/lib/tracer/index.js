@@ -4,14 +4,14 @@ const Config = require('../config')
 const configuration = Config.util.toObject()
 
 const agent = (function () {
-  const self = Agent.start(configuration.apm)
+  let self = Agent.start(configuration.apm)
   this.agent = self
   self.captureError()
   return this
 })()
 
 const tracer = (function () {
-  const self = new Tracer(agent.agent)
+  let self = new Tracer(agent.agent)
   this.tracer = self
   return this
 })()

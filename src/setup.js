@@ -87,7 +87,7 @@ const setup = async () => {
 
   tracingObservable.subscribe({
     next: spans => {
-      for (const span in spans) {
+      for (let span in spans) {
         Logger.info(spans[span].context())
       }
     },

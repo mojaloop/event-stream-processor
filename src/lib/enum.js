@@ -40,7 +40,7 @@ const eventAction = {
 }
 
 const topicMap = {
-  event: {
+  'event': {
     functionality: eventType.EVENT
   }
 }
