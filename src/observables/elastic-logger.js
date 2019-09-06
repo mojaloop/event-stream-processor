@@ -45,7 +45,7 @@ const addElasticsearchMetaData = (value) => {
         'result': (value.metadata.event.state.status === 'success') ? 'success' : 'error',
         'name': value.metadata.trace.service,
         'id': value.metadata.trace.spanId,
-        'sampled': !!value.metadata.trace.sampled
+        'sampled': !value.metadata.trace.sampled
       }
     }
     return {...value, ...elasticsearchMetaData}
