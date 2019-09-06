@@ -4,7 +4,7 @@ const Logger = require('@mojaloop/central-services-shared').Logger
 
 const configuration = Config.util.toObject()
 
-module.exports.initLogger = async (prefix, options) => {
+const initLogger = async (prefix, options) => {
   flogger.configure(prefix, options)
 
   flogger.on('connect', () => {
@@ -18,24 +18,38 @@ module.exports.initLogger = async (prefix, options) => {
 
 const elasticsearch = require('elasticsearch')
 
-const elasticSearchClient = (async function () {
-  try {
-    let self = new elasticsearch.Client({
-      host: configuration.efkClient.host,
-      log: configuration.efkClient.log
-    })
-    this.client = self
-    const resultPing = await self.ping({
-      // ping usually has a 3000ms timeout
-      requestTimeout: 1000
-    })
-    Logger.info(`elasticsearch client connection result - ${resultPing}`)
-    return this
-  } catch (e) {
-    Logger.error(e)
-    throw e
+const ElasticSearchClient = (function () {
+  let instance
+  const createInstance = async () => {
+    try {
+      const client = new elasticsearch.Client({
+        host: configuration.efkClient.host,
+        log: configuration.efkClient.log
+      })
+      const resultPing = await client.ping({
+        // ping usually has a 3000ms timeout
+        requestTimeout: 1000
+      })
+      Logger.info(`elasticsearch client connection result - ${resultPing}`)
+      return client
+    } catch (e) {
+      Logger.error(e)
+      throw e
+    }
+  }
+
+  return {
+    getInstance: async () => {
+      if (!instance) {
+        instance = await createInstance()
+      }
+      return instance
+    }
   }
 })()
 
-module.exports.elasticSearchClient = elasticSearchClient
-module.exports.logger = flogger
+module.exports = {
+  initLogger,
+  logger: flogger,
+  ElasticSearchClient
+}
