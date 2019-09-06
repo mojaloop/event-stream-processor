@@ -6,6 +6,7 @@ const configuration = Config.util.toObject()
 const agent = (function () {
   let self = Agent.start(configuration.apm)
   this.agent = self
+  self.captureError()
   return this
 })()
 

@@ -1,30 +1,41 @@
-const logger = require('fluent-logger')
+const flogger = require('fluent-logger')
 const Config = require('../../lib/config')
+const Logger = require('@mojaloop/central-services-shared').Logger
 
 const configuration = Config.util.toObject()
 
 module.exports.initLogger = async (prefix, options) => {
-  logger.configure(prefix, options)
+  flogger.configure(prefix, options)
 
-  logger.on('connect', () => {
+  flogger.on('connect', () => {
     Promise.resolve({ status: 'succes' })
   })
 
-  logger.on('error', (error) => {
+  flogger.on('error', (error) => {
     Promise.reject(error)
   })
 }
 
 const elasticsearch = require('elasticsearch')
 
-const elasticSearchClient = (function () {
-  let self = new elasticsearch.Client({
-    host: configuration.efkClient.host,
-    log: configuration.efkClient.log
-  })
-  this.client = self
-  return this
+const elasticSearchClient = (async function () {
+  try {
+    let self = new elasticsearch.Client({
+      host: configuration.efkClient.host,
+      log: configuration.efkClient.log
+    })
+    this.client = self
+    const resultPing = await self.ping({
+      // ping usually has a 3000ms timeout
+      requestTimeout: 1000
+    })
+    Logger.info(`elasticsearch client connection result - ${resultPing}`)
+    return this
+  } catch (e) {
+    Logger.error(e)
+    throw e
+  }
 })()
 
 module.exports.elasticSearchClient = elasticSearchClient
-module.exports.logger = logger
+module.exports.logger = flogger

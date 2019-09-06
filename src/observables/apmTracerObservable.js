@@ -2,6 +2,8 @@ const TraceParent = require('traceparent')
 const Rx = require('rxjs')
 const Logger = require('@mojaloop/central-services-shared').Logger
 const { tracer } = require('../lib/tracer')
+const deserializeError = require('deserialize-error')
+// const serializeError = require('serialize-error')
 
 const apmTracerObservable = ({ message }) => {
   return Rx.Observable.create(observable => {
@@ -26,10 +28,19 @@ const apmTracerObservable = ({ message }) => {
       span.setTag('error', true)
       !!code && span.setTag('errorCode', code)
       !!description && span.setTag('errorDescription', `error code: ${code} :: description: ${description}`)
-      !!description && span.log({
-        event: 'error',
-        'error.object': description
-      })
+      if (!message.value.content.error) {
+        let passedError = message.value.content.payload ? new Error(message.value.content.payload) : Object.assign(new Error(description), message.value.content)
+        span.log({
+          event: 'error',
+          'error.object': passedError
+        })
+      } else {
+        span.log({
+          event: 'error',
+          'error.object': deserializeError(message.value.content.error)
+        })
+        // span._span._agent.captureError(deserializeError(message.value.content.error))
+      }
     }
     span.finish(Date.parse(finishTimestamp))
     observable.next({ span })

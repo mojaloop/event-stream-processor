@@ -1,10 +1,10 @@
 const Rx = require('rxjs')
-const efkClient = require('../lib/efk').elasticSearchClient
+const { client } = require('../lib/efk').elasticSearchClient
 
 const elasticsearchClientObservable = ({ message }) => {
   return Rx.Observable.create(async observable => {
     try {
-      await efkClient.client.index({
+      await client.index({
         index: 'mojaloop',
         body: message.value
       })

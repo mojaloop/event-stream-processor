@@ -9,11 +9,13 @@
   },
   "efkClient": {
     "host": "dev1-elasticsearch.mojaloop.live",
-    "log": "trace"
+    "log": "trace",
+    "indexTemplate": "{{index}}-{{date}}"
   },
   "apm": {
     "serviceName": "event-stream-processor",
-    "serverUrl": "http://dev1-apm.mojaloop.live:80"
+    "serverUrl": "http://dev1-apm.mojaloop.live:80",
+    "captureErrorLogStackTraces": "never"
   },
   "PORT": 3082,
   "KAFKA": {

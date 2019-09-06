@@ -1,5 +1,5 @@
 const Rx = require('rxjs')
-const logger = require('../lib/efk').logger
+const logger = require('../lib/efk').flogger
 const Config = require('../lib/config')
 
 const configuration = Config.util.toObject()
