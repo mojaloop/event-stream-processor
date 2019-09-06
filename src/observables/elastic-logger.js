@@ -30,6 +30,30 @@
  --------------
  ******/
 
+const addElasticsearchMetaData = (value) => {
+  if (value.metadata && value.metadata.event && value.metadata.trace) {
+    const elasticsearchMetaData = {
+      'processor': {
+        'name': 'transaction',
+        'event': 'transaction'
+      },
+      'trace': {
+        'id': value.metadata.trace.traceId
+      },
+      '@timestamp': value.metadata.event.createdAt,
+      'transaction': {
+        'result': (value.metadata.event.state.status === 'success') ? 'success' : 'error',
+        'name': value.metadata.trace.service,
+        'id': value.metadata.trace.spanId,
+        'sampled': !!value.metadata.trace.sampled
+      }
+    }
+    return {...value, ...elasticsearchMetaData}
+  } else {
+    return value
+  }
+}
+
 const Rx = require('rxjs')
 const { ElasticSearchClient } = require('../lib/efk')
 const Logger = require('@mojaloop/central-services-shared').Logger
@@ -40,7 +64,7 @@ const elasticsearchClientObservable = ({ message }) => {
       const client = await ElasticSearchClient.getInstance()
       await client.index({
         index: ElasticSearchClient.getIndex(),
-        body: message.value
+        body: addElasticsearchMetaData(message.value)
       })
       observable.complete()
     } catch (e) {
