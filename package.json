@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "v8.1.0-snapshot",
+  "version": "v8.1.0",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "main": "app.js",
   "dependencies": {
@@ -26,15 +26,21 @@
     "traceparent": "1.0.0",
     "uuid4": "1.1.4"
   },
-  "pre-commit": [],
   "scripts": {
     "start": "WITH_SASL=0&&LD_LIBRARY_PATH=$PWD/node_modules/node-rdkafka/build/deps&& node app.js",
     "test": "npm run test:unit | faucet",
+    "standard": "standard",
     "test:unit": "tape 'test/unit/**/*.test.js'",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
-    "test:coverage-check": "npm run test:coverage && istanbul check-coverage"
+    "test:coverage-check": "npm run test:coverage && istanbul check-coverage",
+    "dep:check": "npx ncu -e 2",
+    "dep:update": "npx ncu -u"
   },
+  "pre-commit": [
+    "dep:check",
+    "standard"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mojaloop/email-notifier"
