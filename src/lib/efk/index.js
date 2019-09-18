@@ -34,11 +34,9 @@
 
 const flogger = require('fluent-logger')
 const Config = require('../../lib/config')
-const Logger = require('@mojaloop/central-services-shared').Logger
+const Logger = require('@mojaloop/central-services-logger')
 const Mustache = require('mustache')
 const Moment = require('moment')
-
-const configuration = Config.util.toObject()
 
 const initLogger = async (prefix, options) => {
   flogger.configure(prefix, options)
@@ -61,8 +59,8 @@ const ElasticSearchClient = (() => {
   const createInstance = async () => {
     try {
       const client = new elasticsearch.Client({
-        host: configuration.efkClient.host,
-        log: configuration.efkClient.log
+        host: Config.EFK_CLIENT.host,
+        log: Config.EFK_CLIENT.log
       })
       const resultPing = await client.ping({
         // ping usually has a 3000ms timeout
@@ -80,7 +78,7 @@ const ElasticSearchClient = (() => {
     getIndex: () => {
       const nowDate = Moment()
       if (!index || nowDate.diff(currentDate, 'days') > 0) {
-        const indexConfig = configuration.efkClient.index
+        const indexConfig = Config.EFK_CLIENT.index
         currentDate = nowDate
         const dateString = currentDate.format('YYYY.MM.DD')
         index = Mustache.render(indexConfig.template, {

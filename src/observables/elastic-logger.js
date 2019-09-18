@@ -56,7 +56,7 @@ const addElasticsearchMetaData = (value) => {
 
 const Rx = require('rxjs')
 const { ElasticSearchClient } = require('../lib/efk')
-const Logger = require('@mojaloop/central-services-shared').Logger
+const Logger = require('@mojaloop/central-services-logger')
 
 const elasticsearchClientObservable = ({ message }) => {
   return Rx.Observable.create(async observable => {

@@ -1,9 +1,8 @@
 const TraceParent = require('traceparent')
 const Rx = require('rxjs')
-const Logger = require('@mojaloop/central-services-shared').Logger
+const Logger = require('@mojaloop/central-services-logger')
 const { tracer } = require('../lib/tracer')
 const deserializeError = require('deserialize-error')
-// const serializeError = require('serialize-error')
 
 const apmTracerObservable = ({ message }) => {
   return Rx.Observable.create(observable => {
