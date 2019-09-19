@@ -23,30 +23,57 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- * Rajiv Mothilal <rajiv.mothilal@modusbox.com>
+ * ModusBox
+ - Valentin Genev <valentin.genev@modusbox.com>
+ - Miguel de Barros <miguel.debarros@modusbox.com>
 
  --------------
  ******/
 
-'use strict'
-
-const eventType = {
-  EVENT: 'event'
-}
-const eventAction = {
-  AUDIT: 'audit',
-  LOG: 'log',
-  TRACE: 'trace'
-}
-
-const topicMap = {
-  'event': {
-    functionality: eventType.EVENT
+const addElasticsearchMetaData = (value) => {
+  if (value.metadata && value.metadata.event && value.metadata.trace) {
+    const elasticsearchMetaData = {
+      'processor': {
+        'name': 'transaction',
+        'event': 'transaction'
+      },
+      'trace': {
+        'id': value.metadata.trace.traceId
+      },
+      '@timestamp': value.metadata.event.createdAt,
+      'transaction': {
+        'result': (value.metadata.event.state.status === 'success') ? 'success' : 'error',
+        'name': value.metadata.trace.service,
+        'id': value.metadata.trace.spanId,
+        'sampled': !value.metadata.trace.sampled
+      }
+    }
+    return {...value, ...elasticsearchMetaData}
+  } else {
+    return value
   }
 }
 
+const Rx = require('rxjs')
+const { ElasticSearchClient } = require('../lib/efk')
+const Logger = require('@mojaloop/central-services-logger')
+
+const elasticsearchClientObservable = ({ message }) => {
+  return Rx.Observable.create(async observable => {
+    try {
+      const client = await ElasticSearchClient.getInstance()
+      await client.index({
+        index: ElasticSearchClient.getIndex(),
+        body: addElasticsearchMetaData(message.value)
+      })
+      observable.complete()
+    } catch (e) {
+      observable.error(e)
+      Logger.error(e)
+    }
+  })
+}
+
 module.exports = {
-  eventType,
-  eventAction,
-  topicMap
+  elasticsearchClientObservable
 }

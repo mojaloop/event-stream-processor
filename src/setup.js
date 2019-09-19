@@ -27,34 +27,28 @@
 /**
  * @module src/setup
  */
-const Consumer = require('./lib/kafka/consumer')
-const Utility = require('./lib/kafka/util')
-const Enums = require('./lib/enum')
-const Logger = require('@mojaloop/central-services-shared').Logger
+
+const Kafka = require('@mojaloop/central-services-shared').Util.Kafka
+const Consumer = Kafka.Consumer
+const Enum = require('@mojaloop/central-services-shared').Enum
+const Logger = require('@mojaloop/central-services-logger')
 const Rx = require('rxjs')
 const { share, filter, flatMap } = require('rxjs/operators')
-const createHealtcheck = require('healthcheck-server')
 const Config = require('./lib/config')
-const { initLogger } = require('./lib/efk')
-const configuration = Config.util.toObject()
-// const { initTracer } = require('./lib/tracer')
+const HealthCheck = require('@mojaloop/central-services-shared').HealthCheck.HealthCheck
+const { createHealthCheckServer, defaultHealthHandler } = require('@mojaloop/central-services-health')
+const packageJson = require('../package.json')
+const { getSubServiceHealthBroker } = require('./lib/healthCheck/subServiceHealth')
 const Observables = require('./observables')
 
 const setup = async () => {
-  await initLogger(configuration.efk.namespace, configuration.efk)
-  // await initTracer(configuration.apm)
-  await Consumer.registerEventHandler()
-  const topicName = Utility.transformGeneralTopicName(Enums.eventType.EVENT)
+  await registerEventHandler()
+  const topicName = Kafka.transformGeneralTopicName(Config.KAFKA_CONFIG.TOPIC_TEMPLATES.GENERAL_TOPIC_TEMPLATE.TEMPLATE, Enum.Events.Event.Action.EVENT)
   const consumer = Consumer.getConsumer(topicName)
-
-  createHealtcheck({
-    port: Config.get('PORT'),
-    path: '/health',
-    status: ({ cpu, memory }) => {
-      if (consumer._status.running) return true
-      else return false
-    }
-  })
+  const healthCheck = new HealthCheck(packageJson, [
+    getSubServiceHealthBroker
+  ])
+  await createHealthCheckServer(Config.PORT, defaultHealthHandler(healthCheck))
 
   const topicObservable = Rx.Observable.create((observer) => {
     consumer.on('message', async (message) => {
@@ -69,10 +63,15 @@ const setup = async () => {
   const sharedMessageObservable = topicObservable.pipe(share())
 
   sharedMessageObservable.subscribe(async props => {
-    Observables.fluentdObservable(props).subscribe({
+    // Observables.fluentdObservable(props).subscribe({
+    //   next: v => Logger.info(v),
+    //   error: (e) => Logger.error(e),
+    //   completed: () => Logger.info('fluentd log completed')
+    // })
+    Observables.elasticsearchClientObservable(props).subscribe({
       next: v => Logger.info(v),
       error: (e) => Logger.error(e),
-      completed: () => Logger.info('fluentd log completed')
+      completed: () => Logger.info('elastic API log completed')
     })
   })
 
@@ -89,6 +88,30 @@ const setup = async () => {
     error: (e) => Logger.error(e),
     completed: () => Logger.info('trace info sent')
   })
+}
+
+/**
+ * @function registerEventHandler
+ *
+ * @description This is used to register the handler for the Event topic according to a specified Kafka congfiguration
+ *
+ * @returns true
+ * @throws {Error} - if handler failed to create
+ */
+const registerEventHandler = async () => {
+  try {
+    const EventHandler = {
+      topicName: Kafka.transformGeneralTopicName(Config.KAFKA_CONFIG.TOPIC_TEMPLATES.GENERAL_TOPIC_TEMPLATE.TEMPLATE, Enum.Events.Event.Action.EVENT),
+      config: Kafka.getKafkaConfig(Config.KAFKA_CONFIG, Enum.Kafka.Config.CONSUMER, Enum.Events.Event.Type.EVENT.toUpperCase())
+
+    }
+    EventHandler.config.rdkafkaConf['client.id'] = EventHandler.topicName
+    await Consumer.createHandler(EventHandler.topicName, EventHandler.config)
+    return true
+  } catch (e) {
+    Logger.error(e)
+    throw e
+  }
 }
 
 module.exports = {
