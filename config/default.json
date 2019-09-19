@@ -5,7 +5,7 @@
     "timeout": 3.0,
     "reconnectInterval": 600,
     "requireAckResponse": true,
-    "namespace": "newstash"
+    "namespace": "logstash"
   },
   "EFK_CLIENT": {
     "host": "dev1-elasticsearch.mojaloop.live",
