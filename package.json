@@ -4,6 +4,8 @@
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "main": "app.js",
   "dependencies": {
+    "@hapi/catbox": "^10.2.3",
+    "@hapi/catbox-memory": "^4.1.1",
     "@hapi/hapi": "18.3.2",
     "@mojaloop/central-services-error-handling": "7.5.0",
     "@mojaloop/central-services-health": "8.1.0",
@@ -12,6 +14,7 @@
     "@mojaloop/central-services-stream": "8.1.0",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.1-snapshot",
+    "@mojaloop/event-sdk": "^8.1.0",
     "@mojaloop/opentracing": "6.4.0-snapshot",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.3.0",

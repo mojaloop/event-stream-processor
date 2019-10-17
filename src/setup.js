@@ -40,9 +40,11 @@ const { createHealthCheckServer, defaultHealthHandler } = require('@mojaloop/cen
 const packageJson = require('../package.json')
 const { getSubServiceHealthBroker } = require('./lib/healthCheck/subServiceHealth')
 const Observables = require('./observables')
+const { initializeCache } = require('./lib/masterSpan')
 
 const setup = async () => {
   await registerEventHandler()
+  await initializeCache(Config.CACHE_CONFIG)
   const topicName = Kafka.transformGeneralTopicName(Config.KAFKA_CONFIG.TOPIC_TEMPLATES.GENERAL_TOPIC_TEMPLATE.TEMPLATE, Enum.Events.Event.Action.EVENT)
   const consumer = Consumer.getConsumer(topicName)
   const healthCheck = new HealthCheck(packageJson, [

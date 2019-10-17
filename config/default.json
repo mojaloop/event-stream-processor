@@ -1,4 +1,7 @@
 {
+  "CACHE_CONFIG": {
+    "ttl": 3000000
+  },
   "efk": {
     "host": "dev1-fluentd.mojaloop.live",
     "port": 24224,
