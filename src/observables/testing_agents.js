@@ -2,7 +2,7 @@ const Agent = require('@mojaloop/elastic-apm-node')
 const Tracer = require('@mojaloop/elastic-apm-node-opentracing')
 
 const agentConf = {
-  "serviceName": "test for agent",
+  "serviceName": "agent test",
   "serverUrl": "http://dev1-apm.mojaloop.live:80"
 }
 
@@ -28,6 +28,7 @@ const doRun = async () => {
   span3.finish()
   await pause(15000)
   span.finish()
+  await pause(25000)
 }
 
 doRun()
