@@ -24,20 +24,21 @@ const initializeCache = async (policyOptions) => {
 
 const cacheSpanContext = async (spanContext, state, content) => {
   try {
-    const { traceId, parentSpanId } = spanContext
+    const { traceId, parentSpanId, tags } = spanContext
     const key = {
       segment: 'master-span',
       id: traceId
     }
+    const newSpanId = crypto.randomBytes(8).toString('hex')
     if (!parentSpanId) {
-      const newSpanId = crypto.randomBytes(8).toString('hex')
-      const newChildContext = merge({ tags: { masterSpan: newSpanId } }, { parentSpanId: newSpanId }, { ...spanContext })
-      const newMasterSpanContext = merge({ tags: { masterSpan: newSpanId } }, { ...spanContext }, { spanId: newSpanId, service: 'master-span' })
+      const newChildContext = merge({ parentSpanId: newSpanId }, { ...spanContext })
+      const newMasterSpanContext = merge({ tags: { ...tags, masterSpan: newSpanId } }, { ...spanContext }, { spanId: newSpanId, service: 'master-span' })
       await client.set(key, [{ spanContext: newMasterSpanContext, state, content }], Config.CACHE.ttl)
       return cacheSpanContext(newChildContext, state)
     }
     let trace = await client.get(key)
-    trace.item.push({ spanContext, state, content })
+    let masterTags = (trace && trace[0]) ? trace[0].tags : { masterSpan: newSpanId }
+    trace.item.push({spanContext: merge({tags: { ...tags, masterSpan: masterTags['masterSpan'] }}, { ...spanContext }), state, content})
     await client.set(key, trace.item, Config.CACHE.ttl)
     return true
   } catch (e) {
@@ -68,12 +69,7 @@ const createTrace = async (traceId) => {
         parentSpanIdBuffer
           ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))
           : new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer]))
-      let span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp) }, context)
-      if (tags) {
-        for (let [key, value] of Object.entries(tags)) {
-          span.setTag(key, value)
-        }
-      }
+      let span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
       if (status === EventStatusType.failed) {
         span.setTag('error', true)
         !!code && span.setTag('errorCode', code)
