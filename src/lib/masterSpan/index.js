@@ -37,7 +37,7 @@ const cacheSpanContext = async (spanContext, state, content) => {
       return (service === 'ml_notification_event' && tags.transactionType === 'transfer' && tags.transactionAction === 'fulfil')
     }
 
-    const isPrepareError = () => {
+    const isNotificationError = () => {
       return (
         service === 'ml_notification_event' &&
         tags.transactionType === 'transfer' &&
@@ -45,8 +45,17 @@ const cacheSpanContext = async (spanContext, state, content) => {
         (!!tags.errorCode || (!!trace && !!trace[trace.length - 1].spanContext.tags.errorCode)))
     }
 
-    const isLastSpan = () => {
-      return (isPrepareError() || isFulfil() || service === 'final service')
+    const isPrepareError = () => {
+      return (
+        service === 'ml_transfer_prepare' &&
+        tags.transactionType === 'transfer' &&
+        tags.transactionAction === 'prepare' &&
+        !!tags.errorCode
+        )
+    }
+
+    const isLastSpan = () => { // TODO EXPAND THOSE TO FULLY COVER ALL EXIT POINTS
+      return (isPrepareError() || isNotificationError() || isFulfil() || service === 'final service')
     }
 
     const newSpanId = crypto.randomBytes(8).toString('hex')
