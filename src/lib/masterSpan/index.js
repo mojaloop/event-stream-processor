@@ -24,11 +24,27 @@ const initializeCache = async (policyOptions) => {
 
 const cacheSpanContext = async (spanContext, state, content) => {
   try {
-    const { traceId, parentSpanId, tags } = spanContext
+    const { traceId, parentSpanId, tags, service } = spanContext
+
     const key = {
       segment: 'master-span',
       id: traceId
     }
+
+    let trace = await client.get(key)
+
+    const isFulfil = () => {
+      return (service === 'ml_notification_event' && tags.transactionType === 'transfer' && tags.transactionAction === 'fulfil')
+    }
+
+    const isPrepareError = () => {
+      return (service === 'ml_notification_event' && tags.transactionType === 'transfer' && tags.transactionAction === 'prepare' && (!!trace && !!trace[trace.length - 1].spanContext.tags.error))
+    }
+
+    const isLastSpan = () => {
+      return (isPrepareError() || isFulfil() || service === 'final service')
+    }
+
     const newSpanId = crypto.randomBytes(8).toString('hex')
     if (!parentSpanId) {
       const newChildContext = merge({ parentSpanId: newSpanId }, { ...spanContext })
@@ -36,10 +52,10 @@ const cacheSpanContext = async (spanContext, state, content) => {
       await client.set(key, [{ spanContext: newMasterSpanContext, state, content }], Config.CACHE.ttl)
       return cacheSpanContext(newChildContext, state)
     }
-    let trace = await client.get(key)
     let masterTags = (trace && trace[0]) ? trace[0].tags : { masterSpan: newSpanId }
     trace.item.push({spanContext: merge({tags: { ...tags, masterSpan: masterTags['masterSpan'] }}, { ...spanContext }), state, content})
     await client.set(key, trace.item, Config.CACHE.ttl)
+    if (isLastSpan()) return createTrace(traceId)
     return true
   } catch (e) {
     Logger.error(e)
@@ -90,6 +106,7 @@ const createTrace = async (traceId) => {
       span.finish(Date.parse(finishTimestamp))
     }
     await client.drop(key)
+    return true
   } catch (e) {
     Logger.error(e)
     throw e
