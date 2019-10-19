@@ -38,7 +38,11 @@ const cacheSpanContext = async (spanContext, state, content) => {
     }
 
     const isPrepareError = () => {
-      return (service === 'ml_notification_event' && tags.transactionType === 'transfer' && tags.transactionAction === 'prepare' && (!!trace && !!trace[trace.length - 1].spanContext.tags.error))
+      return (
+        service === 'ml_notification_event' &&
+        tags.transactionType === 'transfer' &&
+        tags.transactionAction === 'prepare' &&
+        (!!tags.errorCode || (!!trace && !!trace[trace.length - 1].spanContext.tags.errorCode)))
     }
 
     const isLastSpan = () => {
