@@ -1,6 +1,24 @@
 {
   "CACHE_CONFIG": {
-    "ttl": 3000000
+    "ttl": 3000000,
+    "segment": "trace"
+  },
+  "SPAN": {
+    "END_CRITERIA": {
+      "transfer": [
+        {
+          "fulfil": {
+            "service": "ml_notification_event"
+          }
+        },
+        {
+          "prepare": {
+            "service": "ml_notification_event",
+            "isError": true
+          }
+        }
+      ]
+    }
   },
   "efk": {
     "host": "dev1-fluentd.mojaloop.live",

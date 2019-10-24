@@ -12,7 +12,7 @@ const partition = 'endpoint-cache'
 const clientOptions = { partition }
 let client
 
-const initializeCache = async (policyOptions) => {
+const initializeCache = async () => {
   try {
     client = new Catbox.Client(CatboxMemory, clientOptions)
     await client.start()
@@ -23,50 +23,44 @@ const initializeCache = async (policyOptions) => {
 }
 
 const cacheSpanContext = async (spanContext, state, content) => {
+  const { traceId, parentSpanId, tags, service } = spanContext
+
+  const key = {
+    segment: Config.CACHE.segment,
+    id: traceId
+  }
+
+  let trace = await client.get(key)
+
+  const isLastSpan = () => {
+    const { transactionAction, transactionType, errorCode } = tags
+    const isError = !!(errorCode)
+    for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
+      if (criteria[transactionAction]) {
+        if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
+          return true
+        } else if (!('isError' in criteria[transactionAction]) && criteria[transactionAction].service === service) {
+          return true
+        }
+      }
+    }
+    return false
+  }
+
+  const newSpanId = crypto.randomBytes(8).toString('hex')
   try {
-    const { traceId, parentSpanId, tags, service } = spanContext
-
-    const key = {
-      segment: 'master-span',
-      id: traceId
-    }
-
-    let trace = await client.get(key)
-
-    const isFulfil = () => {
-      return (service === 'ml_notification_event' && tags.transactionType === 'transfer' && tags.transactionAction === 'fulfil')
-    }
-
-    const isNotificationError = () => {
-      return (
-        service === 'ml_notification_event' &&
-        tags.transactionType === 'transfer' &&
-        tags.transactionAction === 'prepare' &&
-        (!!tags.errorCode || (!!trace && !!trace[trace.length - 1].spanContext.tags.errorCode)))
-    }
-
-    const isPrepareError = () => {
-      return (
-        service === 'ml_transfer_prepare' &&
-        tags.transactionType === 'transfer' &&
-        tags.transactionAction === 'prepare' &&
-        !!tags.errorCode
-        )
-    }
-
-    const isLastSpan = () => { // TODO EXPAND THOSE TO FULLY COVER ALL EXIT POINTS
-      return (isPrepareError() || isNotificationError() || isFulfil() || service === 'final service')
-    }
-
-    const newSpanId = crypto.randomBytes(8).toString('hex')
     if (!parentSpanId) {
       const newChildContext = merge({ parentSpanId: newSpanId }, { ...spanContext })
-      const newMasterSpanContext = merge({ tags: { ...tags, masterSpan: newSpanId } }, { ...spanContext }, { spanId: newSpanId, service: 'master-span' })
+      const newMasterSpanContext = merge({ tags: { ...tags, masterSpan: newSpanId } }, { ...spanContext }, { spanId: newSpanId, service: `master-${tags.transactionType}` })
       await client.set(key, [{ spanContext: newMasterSpanContext, state, content }], Config.CACHE.ttl)
       return cacheSpanContext(newChildContext, state)
     }
-    let masterTags = (trace && trace[0]) ? trace[0].tags : { masterSpan: newSpanId }
-    trace.item.push({spanContext: merge({tags: { ...tags, masterSpan: masterTags['masterSpan'] }}, { ...spanContext }), state, content})
+
+    let masterTags = (trace && trace.item && trace.item[0]) ? trace.item[0].spanContext.tags : { masterSpan: newSpanId }
+    let parentSpanTags = trace.item[trace.item.length - 1].spanContext.tags
+    let errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : {}
+    let tagsToApply = merge({ ...errorTags }, { tags: { ...tags, masterSpan: masterTags['masterSpan'] } })
+    trace.item.push({ spanContext: merge(tagsToApply, { ...spanContext }), state, content })
     await client.set(key, trace.item, Config.CACHE.ttl)
     if (isLastSpan()) return createTrace(traceId)
     return true
@@ -77,11 +71,11 @@ const cacheSpanContext = async (spanContext, state, content) => {
 }
 
 const createTrace = async (traceId) => {
+  const key = {
+    segment: Config.CACHE.segment,
+    id: traceId
+  }
   try {
-    const key = {
-      segment: 'master-span',
-      id: traceId
-    }
     const trace = await client.get(key)
     trace.item[0].spanContext.finishTimestamp = trace.item[trace.item.length - 1].spanContext.finishTimestamp
     for (let currentSpan of trace.item) {
