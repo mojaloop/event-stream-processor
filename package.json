@@ -29,13 +29,13 @@
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/mojaloop/event-stream-processor"
+    "url": "https://github.com/mojaloop/event-stream-processor/issues"
   },
   "homepage": "https://github.com/mojaloop/event-stream-processor#readme",
   "dependencies": {
     "@hapi/hapi": "18.4.0",
     "@mojaloop/central-services-error-handling": "8.3.0",
-    "@mojaloop/central-services-health": "8.1.1",
+    "@mojaloop/central-services-health": "8.3.0",
     "@mojaloop/central-services-logger": "8.1.2",
     "@mojaloop/central-services-shared": "8.3.3",
     "@mojaloop/central-services-stream": "8.3.0",
