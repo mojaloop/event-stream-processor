@@ -44,21 +44,6 @@ const cacheSpanContext = async (spanContext, state, content) => {
     id: spanId
   }
 
-  const isLastSpan = () => {
-    const { transactionAction, transactionType } = tags
-    const isError = (!!(code) && status === EventStatusType.failed)
-    for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
-      if (criteria[transactionAction]) {
-        if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
-          return true
-        } else if (!('isError' in criteria[transactionAction]) && criteria[transactionAction].service === service) {
-          return true
-        }
-      }
-    }
-    return false
-  }
-
   try {
     if (!parentSpanId) {
       const newChildContext = merge({ parentSpanId: newSpanId }, { ...spanContext })
@@ -67,11 +52,28 @@ const cacheSpanContext = async (spanContext, state, content) => {
       return cacheSpanContext(newChildContext, state)
     }
     const parentSpan = !!parentSpanId && (await client.get(parentKey)).item.spanContext
-    const parentSpanTags = parentSpan ? parentSpan.tags : {}
-    const errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : {}
-    const masterTags = ('masterSpan' in parentSpanTags) ? { masterSpan: parentSpanTags.masterSpan } : {}
+    const parentSpanTags = parentSpan ? parentSpan.tags : null
+    const errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : null
+    const masterTags = ('masterSpan' in parentSpanTags) ? { masterSpan: parentSpanTags.masterSpan } : null
     const tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
+
+    const isLastSpan = () => {
+      const { transactionAction, transactionType } = tags
+      const isError = (!!(code) && status === EventStatusType.failed) || errorTags
+      for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
+        if (criteria[transactionAction]) {
+          if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
+            return true
+          } else if (!('isError' in criteria[transactionAction]) && criteria[transactionAction].service === service) {
+            return true
+          }
+        }
+      }
+      return false
+    }
+
     await client.set(key, { spanContext: merge(tagsToApply, { ...spanContext }), state, content }, Config.CACHE.ttl)
+
     if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
       const trace = await createTraceArray(traceId, spanId)
       const result = await createTrace(trace)
