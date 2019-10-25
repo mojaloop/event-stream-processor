@@ -33,22 +33,22 @@
 const addElasticsearchMetaData = (value) => {
   if (value.metadata && value.metadata.event && value.metadata.trace) {
     const elasticsearchMetaData = {
-      'processor': {
-        'name': 'transaction',
-        'event': 'transaction'
+      processor: {
+        name: 'transaction',
+        event: 'transaction'
       },
-      'trace': {
-        'id': value.metadata.trace.traceId
+      trace: {
+        id: value.metadata.trace.traceId
       },
       '@timestamp': value.metadata.event.createdAt,
-      'transaction': {
-        'result': (value.metadata.event.state.status === 'success') ? 'success' : 'error',
-        'name': value.metadata.trace.service,
-        'id': value.metadata.trace.spanId,
-        'sampled': !value.metadata.trace.sampled
+      transaction: {
+        result: (value.metadata.event.state.status === 'success') ? 'success' : 'error',
+        name: value.metadata.trace.service,
+        id: value.metadata.trace.spanId,
+        sampled: !value.metadata.trace.sampled
       }
     }
-    return {...value, ...elasticsearchMetaData}
+    return { ...value, ...elasticsearchMetaData }
   } else {
     return value
   }

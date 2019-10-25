@@ -12,20 +12,16 @@ const partition = 'endpoint-cache'
 const clientOptions = { partition }
 let client
 
-function sleep (ms) {
+const sleep = (ms) => {
   return new Promise(resolve => {
     setTimeout(resolve, ms)
   })
 }
 
 const initializeCache = async () => {
-  try {
-    client = new Catbox.Client(CatboxMemory, clientOptions)
-    await client.start()
-    return true
-  } catch (err) {
-    throw (err)
-  }
+  client = new Catbox.Client(CatboxMemory, clientOptions)
+  await client.start()
+  return true
 }
 
 const cacheSpanContext = async (spanContext, state, content) => {
@@ -71,10 +67,10 @@ const cacheSpanContext = async (spanContext, state, content) => {
       return cacheSpanContext(newChildContext, state)
     }
     const parentSpan = !!parentSpanId && (await client.get(parentKey)).item.spanContext
-    let parentSpanTags = parentSpan ? parentSpan.tags : {}
-    let errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : {}
-    let masterTags = ('masterSpan' in parentSpanTags) ? {masterSpan: parentSpanTags.masterSpan} : {}
-    let tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
+    const parentSpanTags = parentSpan ? parentSpan.tags : {}
+    const errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : {}
+    const masterTags = ('masterSpan' in parentSpanTags) ? { masterSpan: parentSpanTags.masterSpan } : {}
+    const tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
     await client.set(key, { spanContext: merge(tagsToApply, { ...spanContext }), state, content }, Config.CACHE.ttl)
     if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
       const trace = await createTraceArray(traceId, spanId)
@@ -90,11 +86,11 @@ const cacheSpanContext = async (spanContext, state, content) => {
 
 const createTraceArray = async (traceId, lastSpanId) => {
   const segment = `${Config.CACHE.segment}-${traceId}`
-  let key = { segment, id: lastSpanId }
+  const key = { segment, id: lastSpanId }
   let lastSpan = (await client.get(key)).item
   const trace = [lastSpan]
   do {
-    let span = (await client.get({ segment, id: lastSpan.spanContext.parentSpanId })).item
+    const span = (await client.get({ segment, id: lastSpan.spanContext.parentSpanId })).item
     if (span) {
       trace.unshift(span)
       lastSpan = span
@@ -108,7 +104,7 @@ const createTraceArray = async (traceId, lastSpanId) => {
 const createTrace = async (trace) => {
   try {
     trace[0].spanContext.finishTimestamp = trace[trace.length - 1].spanContext.finishTimestamp
-    for (let currentSpan of trace) {
+    for (const currentSpan of trace) {
       const { service, traceId, parentSpanId, spanId, startTimestamp, finishTimestamp, flags, tags = {}, version = 0 } = currentSpan.spanContext
       const { status, code, description } = currentSpan.state
       const { content } = currentSpan
@@ -116,19 +112,19 @@ const createTrace = async (trace) => {
       const flagsBuffer = Buffer.alloc(1).fill(flags | 0x01)
       const traceIdBuffer = Buffer.from(traceId, 'hex')
       const spanIdBuffer = Buffer.from(spanId, 'hex')
-      let parentSpanIdBuffer = parentSpanId && Buffer.from(parentSpanId, 'hex')
+      const parentSpanIdBuffer = parentSpanId && Buffer.from(parentSpanId, 'hex')
       Logger.info(`version: ${versionBuffer.toString('hex')} traceId: ${traceId} spanId: ${spanId} parentSpanId: ${parentSpanId} flags: ${flagsBuffer.toString('hex')}`)
       const context =
         parentSpanIdBuffer
           ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))
           : new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer]))
-      let span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
+      const span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
       if (status === EventStatusType.failed) {
         span.setTag('error', true)
         !!code && span.setTag('errorCode', code)
         !!description && span.setTag('errorDescription', `error code: ${code} :: description: ${description}`)
         if (!content.error) {
-          let passedError = content.payload ? new Error(content.payload) : Object.assign(new Error(description), content)
+          const passedError = content.payload ? new Error(content.payload) : Object.assign(new Error(description), content)
           span.log({
             event: 'error',
             'error.object': passedError
@@ -142,7 +138,7 @@ const createTrace = async (trace) => {
       }
       span.finish(Date.parse(finishTimestamp))
     }
-    for (let span of trace) {
+    for (const span of trace) {
       await client.drop({
         segment: `${Config.CACHE.segment}-${span.spanContext.traceId}`,
         id: span.spanContext.spanId

@@ -29,11 +29,12 @@
  */
 
 const Kafka = require('@mojaloop/central-services-shared').Util.Kafka
-const Consumer = Kafka.Consumer
+const Util = require('@mojaloop/central-services-stream').Util
+const Consumer = Util.Consumer
 const Enum = require('@mojaloop/central-services-shared').Enum
 const Logger = require('@mojaloop/central-services-logger')
 const Rx = require('rxjs')
-const { share, filter, flatMap } = require('rxjs/operators')
+const { share, filter, flatMap, catchError } = require('rxjs/operators')
 const Config = require('./lib/config')
 const HealthCheck = require('@mojaloop/central-services-shared').HealthCheck.HealthCheck
 const { createHealthCheckServer, defaultHealthHandler } = require('@mojaloop/central-services-health')
@@ -62,7 +63,7 @@ const setup = async () => {
     })
   })
 
-  const sharedMessageObservable = topicObservable.pipe(share())
+  const sharedMessageObservable = topicObservable.pipe(share(), catchError(e => { return Rx.onErrorResumeNext(sharedMessageObservable) }))
 
   sharedMessageObservable.subscribe(async props => {
     // Observables.fluentdObservable(props).subscribe({
@@ -79,11 +80,12 @@ const setup = async () => {
 
   const tracingObservable = sharedMessageObservable.pipe(
     filter(props => props.message.value.metadata.event.type === 'trace'),
-    flatMap(Observables.apmTracerObservable))
+    flatMap(Observables.apmTracerObservable),
+    catchError(e => { return Rx.onErrorResumeNext(tracingObservable) }))
 
   tracingObservable.subscribe({
     next: spans => {
-      for (let span in spans) {
+      for (const span in spans) {
         Logger.info(spans[span].context())
       }
     },
