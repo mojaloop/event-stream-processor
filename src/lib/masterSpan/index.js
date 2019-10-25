@@ -1,9 +1,9 @@
-const Catbox = require('@hapi/catbox')
-const CatboxMemory = require('@hapi/catbox-memory')
-const { merge } = require('lodash')
 const crypto = require('crypto')
 const TraceParent = require('traceparent')
+const Catbox = require('@hapi/catbox')
+const CatboxMemory = require('@hapi/catbox-memory')
 const deserializeError = require('deserialize-error')
+const { merge } = require('lodash')
 const Logger = require('@mojaloop/central-services-logger')
 const { EventStatusType } = require('@mojaloop/event-sdk')
 const { tracer } = require('../tracer')
@@ -11,6 +11,12 @@ const Config = require('../config')
 const partition = 'endpoint-cache'
 const clientOptions = { partition }
 let client
+
+function sleep (ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms)
+  })
+}
 
 const initializeCache = async () => {
   try {
@@ -23,18 +29,28 @@ const initializeCache = async () => {
 }
 
 const cacheSpanContext = async (spanContext, state, content) => {
-  const { traceId, parentSpanId, tags, service } = spanContext
+  const { traceId, parentSpanId, tags, service, spanId } = spanContext
+  const { status, code } = state
+  const newSpanId = crypto.randomBytes(8).toString('hex')
 
-  const key = {
-    segment: Config.CACHE.segment,
-    id: traceId
+  const masterKey = {
+    segment: `${Config.CACHE.segment}-${traceId}`,
+    id: newSpanId
   }
 
-  let trace = await client.get(key)
+  const parentKey = {
+    segment: `${Config.CACHE.segment}-${traceId}`,
+    id: parentSpanId
+  }
+
+  const key = {
+    segment: `${Config.CACHE.segment}-${traceId}`,
+    id: spanId
+  }
 
   const isLastSpan = () => {
-    const { transactionAction, transactionType, errorCode } = tags
-    const isError = !!(errorCode)
+    const { transactionAction, transactionType } = tags
+    const isError = (!!(code) && status === EventStatusType.failed)
     for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
       if (criteria[transactionAction]) {
         if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
@@ -47,22 +63,24 @@ const cacheSpanContext = async (spanContext, state, content) => {
     return false
   }
 
-  const newSpanId = crypto.randomBytes(8).toString('hex')
   try {
     if (!parentSpanId) {
       const newChildContext = merge({ parentSpanId: newSpanId }, { ...spanContext })
       const newMasterSpanContext = merge({ tags: { ...tags, masterSpan: newSpanId } }, { ...spanContext }, { spanId: newSpanId, service: `master-${tags.transactionType}` })
-      await client.set(key, [{ spanContext: newMasterSpanContext, state, content }], Config.CACHE.ttl)
+      await client.set(masterKey, { spanContext: newMasterSpanContext, state, content }, Config.CACHE.ttl)
       return cacheSpanContext(newChildContext, state)
     }
-
-    let masterTags = (trace && trace.item && trace.item[0]) ? trace.item[0].spanContext.tags : { masterSpan: newSpanId }
-    let parentSpanTags = trace.item[trace.item.length - 1].spanContext.tags
+    const parentSpan = !!parentSpanId && (await client.get(parentKey)).item.spanContext
+    let parentSpanTags = parentSpan ? parentSpan.tags : {}
     let errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : {}
-    let tagsToApply = merge({ ...errorTags }, { tags: { ...tags, masterSpan: masterTags['masterSpan'] } })
-    trace.item.push({ spanContext: merge(tagsToApply, { ...spanContext }), state, content })
-    await client.set(key, trace.item, Config.CACHE.ttl)
-    if (isLastSpan()) return createTrace(traceId)
+    let masterTags = ('masterSpan' in parentSpanTags) ? {masterSpan: parentSpanTags.masterSpan} : {}
+    let tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
+    await client.set(key, { spanContext: merge(tagsToApply, { ...spanContext }), state, content }, Config.CACHE.ttl)
+    if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
+      const trace = await createTraceArray(traceId, spanId)
+      const result = await createTrace(trace)
+      return result
+    }
     return true
   } catch (e) {
     Logger.error(e)
@@ -70,15 +88,27 @@ const cacheSpanContext = async (spanContext, state, content) => {
   }
 }
 
-const createTrace = async (traceId) => {
-  const key = {
-    segment: Config.CACHE.segment,
-    id: traceId
-  }
+const createTraceArray = async (traceId, lastSpanId) => {
+  const segment = `${Config.CACHE.segment}-${traceId}`
+  let key = { segment, id: lastSpanId }
+  let lastSpan = (await client.get(key)).item
+  const trace = [lastSpan]
+  do {
+    let span = (await client.get({ segment, id: lastSpan.spanContext.parentSpanId })).item
+    if (span) {
+      trace.unshift(span)
+      lastSpan = span
+    } else {
+      await sleep(Config.CACHE.expectSpanTimeout)
+    }
+  } while (lastSpan.spanContext.parentSpanId)
+  return trace
+}
+
+const createTrace = async (trace) => {
   try {
-    const trace = await client.get(key)
-    trace.item[0].spanContext.finishTimestamp = trace.item[trace.item.length - 1].spanContext.finishTimestamp
-    for (let currentSpan of trace.item) {
+    trace[0].spanContext.finishTimestamp = trace[trace.length - 1].spanContext.finishTimestamp
+    for (let currentSpan of trace) {
       const { service, traceId, parentSpanId, spanId, startTimestamp, finishTimestamp, flags, tags = {}, version = 0 } = currentSpan.spanContext
       const { status, code, description } = currentSpan.state
       const { content } = currentSpan
@@ -112,7 +142,12 @@ const createTrace = async (traceId) => {
       }
       span.finish(Date.parse(finishTimestamp))
     }
-    await client.drop(key)
+    for (let span of trace) {
+      await client.drop({
+        segment: `${Config.CACHE.segment}-${span.spanContext.traceId}`,
+        id: span.spanContext.spanId
+      })
+    }
     return true
   } catch (e) {
     Logger.error(e)
@@ -122,6 +157,5 @@ const createTrace = async (traceId) => {
 
 module.exports = {
   initializeCache,
-  cacheSpanContext,
-  createTrace
+  cacheSpanContext
 }

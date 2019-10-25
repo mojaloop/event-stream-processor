@@ -54,7 +54,7 @@ const setup = async () => {
 
   const topicObservable = Rx.Observable.create((observer) => {
     consumer.on('message', async (message) => {
-      Logger.info(`Central-Event-Processor :: Topic ${topicName} :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
+      // Logger.info(`Central-Event-Processor :: Topic ${topicName} :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
       observer.next({ message })
       if (!Consumer.isConsumerAutoCommitEnabled(topicName)) {
         consumer.commitMessageSync(message)

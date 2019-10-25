@@ -4,10 +4,11 @@ const { Tracer } = require('@mojaloop/event-sdk')
 const { cacheSpanContext } = require('../lib/masterSpan')
 
 const apmTracerObservable = ({ message }) => {
+  Logger.info(`Received trace :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
   return Rx.Observable.create(async observable => {
     try {
-      const spanCtx = Tracer.extractContextFromMessage(message.value)
-      await cacheSpanContext(spanCtx, message.value.metadata.event.state, message.value.content)
+      const spanContext = Tracer.extractContextFromMessage(message.value)
+      await cacheSpanContext(spanContext, message.value.metadata.event.state, message.value.content)
       observable.next(true)
     } catch (e) {
       Logger.error(e)

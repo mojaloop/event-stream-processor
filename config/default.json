@@ -1,9 +1,10 @@
 {
   "CACHE_CONFIG": {
     "ttl": 3000000,
-    "segment": "trace"
+    "segment": "trace",
+    "expectSpanTimeout": 2000
   },
-  "SPAN": {
+  "SPAN_CONFIG": {
     "END_CRITERIA": {
       "transfer": [
         {
@@ -17,7 +18,8 @@
             "isError": true
           }
         }
-      ]
+      ],
+      "exceptionList": ["cl_transfer_timeout"]
     }
   },
   "efk": {
