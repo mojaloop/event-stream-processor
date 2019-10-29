@@ -26,6 +26,6 @@
 
 module.exports = {
   fluentdObservable: require('./fluentd-logger').FluentdLoggerObservable,
-  apmTracerObservable: require('./apmTracerObservable').apmTracerObservable,
+  TraceObservable: require('./apmTracerObservable'),
   elasticsearchClientObservable: require('./elastic-logger').elasticsearchClientObservable
 }

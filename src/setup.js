@@ -41,7 +41,7 @@ const { createHealthCheckServer, defaultHealthHandler } = require('@mojaloop/cen
 const packageJson = require('../package.json')
 const { getSubServiceHealthBroker } = require('./lib/healthCheck/subServiceHealth')
 const Observables = require('./observables')
-const { initializeCache } = require('./lib/masterSpan')
+const { initializeCache } = Observables.TraceObservable
 
 const setup = async () => {
   await registerEventHandler()
@@ -80,14 +80,15 @@ const setup = async () => {
 
   const tracingObservable = sharedMessageObservable.pipe(
     filter(props => props.message.value.metadata.event.type === 'trace'),
-    flatMap(Observables.apmTracerObservable),
+    flatMap(Observables.TraceObservable.extractContextObservable),
+    flatMap(Observables.TraceObservable.cacheSpanContextObservable),
+    flatMap(Observables.TraceObservable.recreateTraceObservable),
+    flatMap(Observables.TraceObservable.sendTraceToApmObservable),
     catchError(e => { return Rx.onErrorResumeNext(tracingObservable) }))
 
   tracingObservable.subscribe({
-    next: spans => {
-      for (const span in spans) {
-        Logger.info(spans[span].context())
-      }
+    next: traceId => {
+      Logger.info(`traceId ${traceId} sent to APM`)
     },
     error: (e) => Logger.error(e),
     completed: () => Logger.info('trace info sent')
