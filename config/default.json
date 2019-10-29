@@ -1,10 +1,10 @@
 {
-  "CACHE_CONFIG": {
+  "CACHE": {
     "ttl": 3000000,
     "segment": "trace",
     "expectSpanTimeout": 2000
   },
-  "SPAN_CONFIG": {
+  "SPAN": {
     "END_CRITERIA": {
       "transfer": [
         {
