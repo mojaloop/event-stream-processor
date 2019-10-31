@@ -1,0 +1,33 @@
+const Agent = require('@mojaloop/elastic-apm-node')
+const Tracer = require('@mojaloop/elastic-apm-node-opentracing')
+
+const agentConf = {
+  "serviceName": "test for agent",
+  "serverUrl": "http://dev1-apm.mojaloop.live:80"
+}
+
+const agent = Agent.start(agentConf)
+const tracer = new Tracer(agent)
+
+const pause = async (ms) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve()
+    }, ms)
+  })
+}
+
+const doRun = async () => {
+  let span = tracer.startSpan('parent-transaction')
+  await pause(15000)
+  let span2 = tracer.startSpan('child-span', { childOf: span.context() })
+  await pause(15000)
+  span2.finish()
+  let span3 = tracer.startSpan('child2-span', { childOf: span.context() })
+  await pause(15000)
+  span3.finish()
+  await pause(15000)
+  span.finish()
+}
+
+doRun()

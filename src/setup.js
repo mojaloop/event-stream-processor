@@ -29,20 +29,23 @@
  */
 
 const Kafka = require('@mojaloop/central-services-shared').Util.Kafka
-const Consumer = Kafka.Consumer
+const Util = require('@mojaloop/central-services-stream').Util
+const Consumer = Util.Consumer
 const Enum = require('@mojaloop/central-services-shared').Enum
 const Logger = require('@mojaloop/central-services-logger')
 const Rx = require('rxjs')
-const { share, filter, flatMap } = require('rxjs/operators')
+const { share, filter, flatMap, catchError } = require('rxjs/operators')
 const Config = require('./lib/config')
 const HealthCheck = require('@mojaloop/central-services-shared').HealthCheck.HealthCheck
 const { createHealthCheckServer, defaultHealthHandler } = require('@mojaloop/central-services-health')
 const packageJson = require('../package.json')
 const { getSubServiceHealthBroker } = require('./lib/healthCheck/subServiceHealth')
 const Observables = require('./observables')
+const { initializeCache } = Observables.TraceObservable
 
 const setup = async () => {
   await registerEventHandler()
+  await initializeCache(Config.CACHE_CONFIG)
   const topicName = Kafka.transformGeneralTopicName(Config.KAFKA_CONFIG.TOPIC_TEMPLATES.GENERAL_TOPIC_TEMPLATE.TEMPLATE, Enum.Events.Event.Action.EVENT)
   const consumer = Consumer.getConsumer(topicName)
   const healthCheck = new HealthCheck(packageJson, [
@@ -52,7 +55,7 @@ const setup = async () => {
 
   const topicObservable = Rx.Observable.create((observer) => {
     consumer.on('message', async (message) => {
-      Logger.info(`Central-Event-Processor :: Topic ${topicName} :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
+      // Logger.info(`Central-Event-Processor :: Topic ${topicName} :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
       observer.next({ message })
       if (!Consumer.isConsumerAutoCommitEnabled(topicName)) {
         consumer.commitMessageSync(message)
@@ -60,7 +63,7 @@ const setup = async () => {
     })
   })
 
-  const sharedMessageObservable = topicObservable.pipe(share())
+  const sharedMessageObservable = topicObservable.pipe(share(), catchError(e => { return Rx.onErrorResumeNext(sharedMessageObservable) }))
 
   sharedMessageObservable.subscribe(async props => {
     // Observables.fluentdObservable(props).subscribe({
@@ -77,13 +80,15 @@ const setup = async () => {
 
   const tracingObservable = sharedMessageObservable.pipe(
     filter(props => props.message.value.metadata.event.type === 'trace'),
-    flatMap(Observables.apmTracerObservable))
+    flatMap(Observables.TraceObservable.extractContextObservable),
+    flatMap(Observables.TraceObservable.cacheSpanContextObservable),
+    flatMap(Observables.TraceObservable.recreateTraceObservable),
+    flatMap(Observables.TraceObservable.sendTraceToApmObservable),
+    catchError(e => { return Rx.onErrorResumeNext(tracingObservable) }))
 
   tracingObservable.subscribe({
-    next: spans => {
-      for (let span in spans) {
-        Logger.info(spans[span].context())
-      }
+    next: traceId => {
+      Logger.info(`traceId ${traceId} sent to APM`)
     },
     error: (e) => Logger.error(e),
     completed: () => Logger.info('trace info sent')

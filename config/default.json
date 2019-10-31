@@ -1,4 +1,51 @@
 {
+  "CACHE": {
+    "ttl": 300000,
+    "segment": "trace",
+    "expectSpanTimeout": 2000
+  },
+  "SPAN": {
+    "START_CRITERIA": {
+      "transfer": [
+        {
+          "prepare": {
+            "service": "ml_transfer_prepare"
+          }
+        },
+        {
+          "fulfil": {
+            "service": "ml_transfer_fulfil"
+          }
+        },
+        {
+          "abort": {
+            "service": "ml_transfer_abort"
+          }
+        }
+      ]
+    },
+    "END_CRITERIA": {
+      "transfer": [
+        {
+          "fulfil": {
+            "service": "ml_notification_event"
+          }
+        },
+        {
+          "abort": {
+            "service": "ml_notification_event"
+          }
+        },
+        {
+          "prepare": {
+            "service": "ml_notification_event",
+            "isError": true
+          }
+        }
+      ],
+      "exceptionList": ["cl_transfer_timeout"]
+    }
+  },
   "efk": {
     "host": "dev1-fluentd.mojaloop.live",
     "port": 24224,
