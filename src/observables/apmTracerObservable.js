@@ -37,50 +37,65 @@ const cacheSpanContextObservable = ({ spanContext, state, content }) => {
   return Rx.Observable.create(async observable => {
     const { traceId, parentSpanId, tags, service, spanId } = spanContext
     const { status, code } = state
-    const newSpanId = crypto.randomBytes(8).toString('hex')
 
     const key = {
       segment: `${Config.CACHE.segment}`,
       id: traceId
     }
+    const isCached = () => {
+      const { tags, service } = spanContext
+      const { transactionType, transactionAction } = tags
+      for (const criteria of Config.SPAN.START_CRITERIA[transactionType]) {
+        if (criteria[transactionAction] && (criteria[transactionAction].service === service)) {
+          return true
+        }
+      }
+      return false
+    }
 
     try {
       let cachedTrace = await client.get(key)
-      if (!cachedTrace) cachedTrace = { item: { spans: {}, master: null, lastSpan: null } }
-      cachedTrace = cachedTrace.item
-      if (!parentSpanId) {
-        const newChildContext = merge({ parentSpanId: newSpanId }, { ...spanContext })
-        const newMasterSpanContext = merge({ tags: { ...tags, masterSpan: newSpanId } }, { ...spanContext }, { spanId: newSpanId, service: `master-${tags.transactionType}` })
-        cachedTrace.spans[newSpanId] = { spanContext: newMasterSpanContext, state, content }
-        cachedTrace.masterSpan = newMasterSpanContext
-        spanContext = newChildContext
-      }
-      const parentSpanTags = cachedTrace.spans[spanContext.parentSpanId].spanContext.tags
-      const errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : null
-      const masterTags = ('masterSpan' in parentSpanTags) ? { masterSpan: parentSpanTags.masterSpan } : null
-      const tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
-      cachedTrace.spans[spanId] = { spanContext: merge(tagsToApply, { ...spanContext }), state, content }
+      if ((!isCached() && !parentSpanId) || (!!parentSpanId && !cachedTrace)) {
+        sendSpanToApm({ spanContext, state, content })
+        observable.complete()
+      } else {
+        if (!cachedTrace) cachedTrace = { item: { spans: {}, master: null, lastSpan: null } }
+        cachedTrace = cachedTrace.item
+        if (!parentSpanId) {
+          const newSpanId = crypto.randomBytes(8).toString('hex')
+          const newChildContext = merge({ parentSpanId: newSpanId }, { ...spanContext })
+          const newMasterSpanContext = merge({ tags: { ...tags, masterSpan: newSpanId } }, { ...spanContext }, { spanId: newSpanId, service: `master-${tags.transactionType}` })
+          cachedTrace.spans[newSpanId] = { spanContext: newMasterSpanContext, state, content }
+          cachedTrace.masterSpan = newMasterSpanContext
+          spanContext = newChildContext
+        }
+        const parentSpanTags = cachedTrace.spans[spanContext.parentSpanId].spanContext.tags
+        const errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : null
+        const masterTags = ('masterSpan' in parentSpanTags) ? { masterSpan: parentSpanTags.masterSpan } : null
+        const tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
+        cachedTrace.spans[spanId] = { spanContext: merge(tagsToApply, { ...spanContext }), state, content }
 
-      const isLastSpan = () => {
-        const { transactionAction, transactionType } = tags
-        const isError = (!!(code) && status === EventStatusType.failed) || errorTags
-        for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
-          if (criteria[transactionAction]) {
-            if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
-              return true
-            } else if (!('isError' in criteria[transactionAction]) && criteria[transactionAction].service === service) {
-              return true
+        const isLastSpan = () => {
+          const { transactionAction, transactionType } = tags
+          const isError = (!!(code) && status === EventStatusType.failed) || errorTags
+          for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
+            if (criteria[transactionAction]) {
+              if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
+                return true
+              } else if (!('isError' in criteria[transactionAction]) && criteria[transactionAction].service === service) {
+                return true
+              }
             }
           }
+          return false
         }
-        return false
-      }
 
-      if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
-        cachedTrace.lastSpan = spanContext
+        if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
+          cachedTrace.lastSpan = spanContext
+        }
+        await client.set(key, cachedTrace, Config.CACHE.ttl)
+        observable.next(traceId)
       }
-      await client.set(key, cachedTrace, Config.CACHE.ttl)
-      observable.next(traceId)
     } catch (e) {
       Logger.error(e)
       observable.error(e)
@@ -117,6 +132,42 @@ const recreateTraceObservable = (traceId) => {
   })
 }
 
+const sendSpanToApm = currentSpan => {
+  const { service, traceId, parentSpanId, spanId, startTimestamp, finishTimestamp, flags, tags = {}, version = 0 } = currentSpan.spanContext
+  const { status, code, description } = currentSpan.state
+  const { content } = currentSpan
+  const versionBuffer = Buffer.alloc(1).fill(version)
+  const flagsBuffer = Buffer.alloc(1).fill(flags | 0x01)
+  const traceIdBuffer = Buffer.from(traceId, 'hex')
+  const spanIdBuffer = Buffer.from(spanId, 'hex')
+  const parentSpanIdBuffer = parentSpanId && Buffer.from(parentSpanId, 'hex')
+  Logger.info(`version: ${versionBuffer.toString('hex')} traceId: ${traceId} spanId: ${spanId} parentSpanId: ${parentSpanId} flags: ${flagsBuffer.toString('hex')}`)
+  const context =
+    parentSpanIdBuffer
+      ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))
+      : new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer]))
+  const span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
+  if (status === EventStatusType.failed) {
+    span.setTag('error', true)
+    !!code && span.setTag('errorCode', code)
+    !!description && span.setTag('errorDescription', `error code: ${code} :: description: ${description}`)
+    if (!content.error) {
+      const passedError = content.payload ? new Error(content.payload) : Object.assign(new Error(description), content)
+      span.log({
+        event: 'error',
+        'error.object': passedError
+      })
+    } else {
+      span.log({
+        event: 'error',
+        'error.object': deserializeError(content.error)
+      })
+    }
+  }
+  span.finish(Date.parse(finishTimestamp))
+  return currentSpan
+}
+
 const sendTraceToApmObservable = (trace) => {
   const traceId = trace[0].spanContext.traceId
   const key = {
@@ -126,38 +177,7 @@ const sendTraceToApmObservable = (trace) => {
   return Rx.Observable.create(async observable => {
     try {
       for (const currentSpan of trace) {
-        const { service, traceId, parentSpanId, spanId, startTimestamp, finishTimestamp, flags, tags = {}, version = 0 } = currentSpan.spanContext
-        const { status, code, description } = currentSpan.state
-        const { content } = currentSpan
-        const versionBuffer = Buffer.alloc(1).fill(version)
-        const flagsBuffer = Buffer.alloc(1).fill(flags | 0x01)
-        const traceIdBuffer = Buffer.from(traceId, 'hex')
-        const spanIdBuffer = Buffer.from(spanId, 'hex')
-        const parentSpanIdBuffer = parentSpanId && Buffer.from(parentSpanId, 'hex')
-        Logger.info(`version: ${versionBuffer.toString('hex')} traceId: ${traceId} spanId: ${spanId} parentSpanId: ${parentSpanId} flags: ${flagsBuffer.toString('hex')}`)
-        const context =
-          parentSpanIdBuffer
-            ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))
-            : new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer]))
-        const span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
-        if (status === EventStatusType.failed) {
-          span.setTag('error', true)
-          !!code && span.setTag('errorCode', code)
-          !!description && span.setTag('errorDescription', `error code: ${code} :: description: ${description}`)
-          if (!content.error) {
-            const passedError = content.payload ? new Error(content.payload) : Object.assign(new Error(description), content)
-            span.log({
-              event: 'error',
-              'error.object': passedError
-            })
-          } else {
-            span.log({
-              event: 'error',
-              'error.object': deserializeError(content.error)
-            })
-          }
-        }
-        span.finish(Date.parse(finishTimestamp))
+        sendSpanToApm(currentSpan)
       }
       await client.drop(key)
       observable.next(traceId)
