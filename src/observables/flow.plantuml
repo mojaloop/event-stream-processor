@@ -1,45 +1,58 @@
 @startuml
 autonumber
-    EventSidecar -> EventStreamProcessor: newSpan
-    note right of EventSidecar: **spanContext**: {\ntraceId,\nspanId,\nservice,\nparentSpanId = null\nstartTimestamp,\nfinishTimestamp \n}\n
-    Activate EventStreamProcessor
-group Cache Span Context
-    alt newSpan.parentSpanId = null?
-        EventStreamProcessor -> TraceCache: Create masterSpan with same traceId, and new spanId,\nadd masterSpan tag, change service name
-        note right of EventStreamProcessor: Cache key: {segment: traceId, id: spanId}\n Item: merge({\n    tags: { ...tags, masterSpan: newSpanId } },\n    {...**spanContext**},\n    { spanId: newSpanId,\n    service: `master-${tags.transactionType}`}\n})
-        EventStreamProcessor -> EventStreamProcessor: newSpan.parentId = masterSpan.spanId
-    == <Cache Spans>(newSpan) parentSpanId = masterSpan.spanId ==
-    note over EventStreamProcessor: The function entry will be in the **No** branch in that case
-    else No
-        EventStreamProcessor <- TraceCache: Get parentSpan
-        EventStreamProcessor -> EventStreamProcessor: parentSpan.tags.errorCode ? newSpan.tags.errorCode = parentSpan.tags.errorCode\nparentSpan.tags.masterSpan ? newSpan.tags.masterSpan = parentSpan.tags.masterSpan\nExtend newSpan.tags = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
-        EventStreamProcessor -> TraceCache: create newSpan
-        alt isLastSpan
-            EventStreamProcessor <- TraceCache: get lastSpan = newSpan
-            EventStreamProcessor -> EventStreamProcessor: trace[] = [lastSpan]
-            loop while (lastSpan.parentSpanId)
-                EventStreamProcessor <- TraceCache: get last span parent
-                alt parentSpan?
-                    EventStreamProcessor -> EventStreamProcessor: trace.unshift(parentSpan)\nlastSpan = parentSpan
-                else parentSpan not found
-                    ...
-                    EventStreamProcessor -> EventStreamProcessor: pause(timeout)
-                end
-            end
-            group Create Trace
-                EventStreamProcessor -> EventStreamProcessor: trace[masterSpan].finishTimestamp = trace[lastSpan].finishTimestamp
-                loop trace spans
-                    EventStreamProcessor -> APM: send span
-                end
-                loop trace spans
-                    EventStreamProcessor -> TraceCache: drop span
-                end
-            end
+title Event Streaming Processor 
+control "Event Sidecar" as ES
+
+box Event Stream Processor actors #LavenderBlush
+    participant "Extract Content" as EC
+    participant "Span Collector" as SC
+    participant "Trace Builder" as TB
+    participant "Span sender" as SS
+    participant "Trace Cache" as TC
+end box
+    ES -> EC: Event Trace Message
+    Activate EC
+    Activate TC
+    note right of EC: {\n **spanContext**: {\n    traceId,\n    spanId,\n    service,\n    parentSpanId,\n    startTimestamp,\n    fnishTimestamp \n},\n **content**,\n **status**\n}
+    EC -> SC: Extract spanContext, content and status
+    Deactivate EC
+    Activate SC
+    alt Check Start Master Span Criteria Config && !parentSpanId\n OR parentSpanId and cache has no traceId entry. Should Cache.
+        SC <- TC: get cache for traceId
+        alt !parentSpanId ?
+            SC -> SC: Create Trace Cache structure \nand add master span and parent span
+            note right of SC: 
         else No
-            EventStreamProcessor -> EventStreamProcessor !!: exit
+            SC <- TC: Get parentSpan
+            SC -> SC: parentSpan.tags.errorCode ? newSpan.tags.errorCode = parentSpan.tags.errorCode\nparentSpan.tags.masterSpan ? newSpan.tags.masterSpan = parentSpan.tags.masterSpan\nExtend newSpan.tags = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
+            ESP -> TraceCache: create newSpan
+            alt isLastSpan
+                ESP <- TraceCache: get lastSpan = newSpan
+                ESP -> ESP: trace[] = [lastSpan]
+                loop while (lastSpan.parentSpanId)
+                    ESP <- TraceCache: get last span parent
+                    alt parentSpan?
+                        ESP -> ESP: trace.unshift(parentSpan)\nlastSpan = parentSpan
+                    else parentSpan not found
+                        ...
+                        ESP -> ESP: pause(timeout)
+                    end
+                end
+                group Create Trace
+                    ESP -> ESP: trace[masterSpan].finishTimestamp = trace[lastSpan].finishTimestamp
+                    loop trace spans
+                        ESP -> APM: send span
+                    end
+                    loop trace spans
+                        ESP -> TraceCache: drop span
+                    end
+                end
+            else No
+                ESP -> ESP !!: exit
+            end
         end
+    else direct
     end
-end
     
-    deactivate EventStreamProcessor
+    deactivate ESP
 @enduml

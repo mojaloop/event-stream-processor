@@ -43,7 +43,7 @@
           }
         }
       ],
-      "exceptionList": ["cl_transfer_timeout", "final service"]
+      "exceptionList": ["cl_transfer_timeout"]
     }
   },
   "efk": {
