@@ -26,7 +26,8 @@
 
 const { statusEnum, serviceName } = require('@mojaloop/central-services-shared').HealthCheck.HealthCheckEnums
 const Logger = require('@mojaloop/central-services-logger')
-const Consumer = require('@mojaloop/central-services-shared').Util.Kafka.Consumer
+const Util = require('@mojaloop/central-services-stream').Util
+const Consumer = Util.Consumer
 
 /**
  * @function getSubServiceHealthBroker
