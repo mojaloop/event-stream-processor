@@ -82,6 +82,7 @@ const setup = async () => {
     filter(props => props.message.value.metadata.event.type === 'trace'),
     flatMap(Observables.TraceObservable.extractContextObservable),
     flatMap(Observables.TraceObservable.cacheSpanContextObservable),
+    flatMap(Observables.TraceObservable.findLastSpanObservable),
     flatMap(Observables.TraceObservable.recreateTraceObservable),
     flatMap(Observables.TraceObservable.sendTraceToApmObservable),
     catchError(e => { return Rx.onErrorResumeNext(tracingObservable) }))
