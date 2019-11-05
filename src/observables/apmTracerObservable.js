@@ -94,23 +94,30 @@ const findLastSpanObservable = ({ traceId, latestSpanId }) => {
       const { spanContext, state, content } = cachedTrace.spans[spanKey[0]]
       const { parentSpanId, tags, service, spanId } = spanContext
       const { status, code } = state
-      const parentSpanTags = cachedTrace.spans[parentSpanId] ? cachedTrace.spans[parentSpanId].spanContext.tags : null
-      if (!parentSpanTags) continue
-      const errorTags = ('errorCode' in parentSpanTags) ? { errorCode: parentSpanTags.errorCode } : null
+      const parentSpan = cachedTrace.spans[parentSpanId]
+      if (!parentSpan) continue
+      const parentSpanTags = parentSpan ? parentSpan.spanContext.tags : null
+      const errorTags = ('errorCode' in parentSpanTags)
+        ? { errorCode: parentSpanTags.errorCode }
+        : ('code' in parentSpan.state && parentSpan.state.status === EventStatusType.failed)
+          ? { errorCode: parentSpan.state.code }
+          : null
       const masterTags = ('masterSpan' in parentSpanTags) ? { masterSpan: parentSpanTags.masterSpan } : null
       const tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
       cachedTrace.spans[spanId] = { spanContext: merge(tagsToApply, { ...spanContext }), state, content }
 
       const isLastSpan = () => {
         const { transactionAction, transactionType } = tags
-        const isError = (!!(code) && status === EventStatusType.failed) || errorTags
+        const isError = (!!(code) && status === EventStatusType.failed) || !!errorTags
         if (Config.SPAN.END_CRITERIA[transactionType]) {
           for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
             if (criteria[transactionAction]) {
-              if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
-                return true
-              } else if (!('isError' in criteria[transactionAction]) && criteria[transactionAction].service === service) {
-                return true
+              if (criteria[transactionAction].service === service) {
+                if (('isError' in criteria[transactionAction]) && criteria[transactionAction].isError && isError) {
+                  return true
+                } else if (!('isError' in criteria[transactionAction])) {
+                  return true
+                }
               }
             }
           }
