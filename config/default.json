@@ -21,6 +21,11 @@
           "abort": {
             "service": "ml_transfer_abort"
           }
+        },
+        {
+          "timeout-received": {
+            "service": "cl_transfer_timeout"
+          }
         }
       ]
     },
@@ -35,6 +40,10 @@
           "abort": {
             "service": "ml_notification_event"
           }
+        },        {
+          "timeout-received ": {
+            "service": "ml_notification_event"
+          }
         },
         {
           "prepare": {
@@ -43,7 +52,7 @@
           }
         }
       ],
-      "exceptionList": ["cl_transfer_timeout"]
+      "exceptionList": []
     }
   },
   "efk": {
