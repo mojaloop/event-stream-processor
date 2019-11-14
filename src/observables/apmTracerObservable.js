@@ -10,14 +10,26 @@ const { Tracer, EventStatusType } = require('@mojaloop/event-sdk')
 const { merge } = require('lodash')
 const { tracer } = require('../lib/tracer')
 
-const partition = 'endpoint-cache'
+const partition = 'trace-cache'
 const clientOptions = { partition }
 let client
+const schedulers = {}
 
 const initializeCache = async () => {
   client = new Catbox.Client(CatboxMemory, clientOptions)
   await client.start()
   return true
+}
+
+const updateTraceToCache = async (key, trace, traceId) => {
+  try {
+    const currentTrace = await client.get(key)
+    if (currentTrace && (currentTrace.ttl > (Config.CACHE.ttl - Config.CACHE.expectSpanTimeout) && schedulers[traceId].id)) schedulers[traceId].unsubscribe()
+    await client.set(key, trace, Config.CACHE.ttl)
+    schedulers[traceId] = Rx.asyncScheduler.schedule(finishStaleTrace, Config.CACHE.expectSpanTimeout, traceId)
+  } catch (e) {
+    Logger.error(e)
+  }
 }
 
 const extractContextObservable = ({ message }) => {
@@ -71,7 +83,8 @@ const cacheSpanContextObservable = ({ spanContext, state, content }) => {
         }
         cachedTrace.spans[spanId] = { spanContext, state, content }
       }
-      await client.set(key, cachedTrace, Config.CACHE.ttl)
+      await updateTraceToCache(key, cachedTrace, traceId)
+      // await client.set(key, cachedTrace, Config.CACHE.ttl)
       observable.next({ traceId, spanId })
     } catch (e) {
       Logger.error(e)
@@ -127,11 +140,11 @@ const findLastSpanObservable = ({ traceId, latestSpanId }) => {
 
       if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
         cachedTrace.lastSpan = spanContext
-        await client.set(key, cachedTrace, Config.CACHE.ttl)
+        await updateTraceToCache(key, cachedTrace, traceId)
         observable.next(traceId)
       }
     }
-    await client.set(key, cachedTrace, Config.CACHE.ttl)
+    await updateTraceToCache(key, cachedTrace, traceId)
     observable.complete()
   })
 }
@@ -212,6 +225,11 @@ const sendTraceToApmObservable = (trace) => {
       for (const currentSpan of trace) {
         sendSpanToApm(currentSpan)
       }
+      if (schedulers[traceId]) {
+        schedulers[traceId].unsubscribe()
+        delete schedulers[traceId]
+      }
+
       await client.drop(key)
       observable.next(traceId)
     } catch (e) {
@@ -219,6 +237,47 @@ const sendTraceToApmObservable = (trace) => {
       observable.error(e)
     }
   })
+}
+
+const finishStaleTrace = async (traceId) => {
+  const key = {
+    segment: `${Config.CACHE.segment}`,
+    id: traceId
+  }
+  try {
+    const cachedTraceElement = await client.get(key)
+    if (!cachedTraceElement) return
+    const cachedTrace = cachedTraceElement.item
+    const sortedSpans = Array.from(Object.values(cachedTrace.spans)).sort((a, b) => b.spanContext.startTimestamp > a.spanContext.startTimestamp ? -1 : b.spanContext.startTimestamp < a.spanContext.startTimestamp ? 1 : 0)
+    const resultTrace = []
+    cachedTrace.lastSpan = sortedSpans[sortedSpans.length - 1].spanContext
+    for (const spanId in sortedSpans) {
+      const span = sortedSpans[spanId]
+      if (span.spanContext.service === `master-${span.spanContext.tags.transactionType}`) {
+        span.spanContext.finishTimestamp = sortedSpans[sortedSpans.length - 1].spanContext.finishTimestamp
+        span.spanContext.tags.staleTrace = true
+        resultTrace.unshift(span)
+        continue
+      } else if (cachedTrace.lastSpan && span.spanContext.spanId === cachedTrace.lastSpan.spanId) {
+        resultTrace.push(span)
+        break
+      } else if (sortedSpans[Number(spanId) + 1].spanContext.parentSpanId === span.spanContext.spanId) {
+        resultTrace.push(span)
+        continue
+      } else {
+        span.spanContext.tags.missingParent = true
+        sortedSpans[Number(spanId) + 1].spanContext.parentSpanId = span.spanContext.spanId
+        resultTrace.push(span)
+      }
+    }
+    for (const span of resultTrace) {
+      sendSpanToApm(span)
+    }
+    delete schedulers[traceId]
+    await client.drop(key)
+  } catch (e) {
+    Logger.error(e)
+  }
 }
 
 module.exports = {

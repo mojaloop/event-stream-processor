@@ -2,7 +2,7 @@
   "CACHE": {
     "ttl": 300000,
     "segment": "trace",
-    "expectSpanTimeout": 2000
+    "expectSpanTimeout": 270000
   },
   "SPAN": {
     "START_CRITERIA": {
@@ -41,7 +41,7 @@
             "service": "ml_notification_event"
           }
         },        {
-          "timeout-received ": {
+          "timeout-received": {
             "service": "ml_notification_event"
           }
         },
