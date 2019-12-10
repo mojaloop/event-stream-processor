@@ -68,12 +68,12 @@ const setup = async () => {
   sharedMessageObservable.subscribe(async props => {
     // Observables.fluentdObservable(props).subscribe({
     //   next: v => Logger.info(v),
-    //   error: (e) => Logger.error(e),
+    //   error: (e) => Logger.error(e.stack),
     //   completed: () => Logger.info('fluentd log completed')
     // })
     Observables.elasticsearchClientObservable(props).subscribe({
       next: v => Logger.info(v),
-      error: (e) => Logger.error(e),
+      error: (e) => Logger.error(e.stack),
       completed: () => Logger.info('elastic API log completed')
     })
   })
@@ -91,7 +91,7 @@ const setup = async () => {
     next: traceId => {
       Logger.info(`traceId ${traceId} sent to APM`)
     },
-    error: (e) => Logger.error(e),
+    error: (e) => Logger.error(e.stack),
     completed: () => Logger.info('trace info sent')
   })
 }
@@ -115,7 +115,7 @@ const registerEventHandler = async () => {
     await Consumer.createHandler(EventHandler.topicName, EventHandler.config)
     return true
   } catch (e) {
-    Logger.error(e)
+    Logger.error(e.stack)
     throw e
   }
 }

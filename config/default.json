@@ -13,11 +13,6 @@
           }
         },
         {
-          "fulfil": {
-            "service": "ml_transfer_fulfil"
-          }
-        },
-        {
           "abort": {
             "service": "ml_transfer_abort"
           }
