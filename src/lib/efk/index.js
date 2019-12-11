@@ -69,7 +69,7 @@ const ElasticSearchClient = (() => {
       Logger.info(`elasticsearch client connection result - ${resultPing}`)
       return client
     } catch (e) {
-      Logger.error(e)
+      Logger.error(e.stack)
       throw e
     }
   }
