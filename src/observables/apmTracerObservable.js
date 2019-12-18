@@ -70,7 +70,7 @@ const cacheSpanContextObservable = ({ spanContext, state, content }) => {
       let cachedTraceItem
       if ((!isStartSpan() && !parentSpanId) || (!!parentSpanId && !cachedTrace)) {
         sendSpanToApm({ spanContext, state, content })
-        observable.complete()
+        return observable.complete()
       } else {
         if (!cachedTrace) cachedTrace = { item: { spans: {}, masterSpan: null, lastSpan: null } }
         cachedTraceItem = cachedTrace.item
@@ -102,7 +102,9 @@ const findLastSpanObservable = ({ traceId, latestSpanId }) => {
     }
 
     const cachedTrace = (await client.get(key)).item
-    if (!cachedTrace) observable.complete()
+    if (!cachedTrace) {
+      return observable.complete()
+    }
     const sortedSpans = Array.from(Object.entries(cachedTrace.spans)).sort((a, b) => a[1].spanContext.startTimestamp > b[1].spanContext.startTimestamp ? -1 : a[1].spanContext.startTimestamp < b[1].spanContext.startTimestamp ? 1 : 0)
     for (const spanKey of sortedSpans) {
       const { spanContext, state, content } = cachedTrace.spans[spanKey[0]]
@@ -142,7 +144,7 @@ const findLastSpanObservable = ({ traceId, latestSpanId }) => {
       if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
         cachedTrace.lastSpan = spanContext
         await updateTraceToCache(key, cachedTrace, traceId)
-        observable.next(traceId)
+        return observable.next(traceId)
       }
     }
     await updateTraceToCache(key, cachedTrace, traceId)
@@ -226,12 +228,11 @@ const sendTraceToApmObservable = (trace) => {
       for (const currentSpan of trace) {
         sendSpanToApm(currentSpan)
       }
+      await client.drop(key)
       if (schedulers[traceId]) {
         schedulers[traceId].unsubscribe()
         delete schedulers[traceId]
       }
-
-      await client.drop(key)
       observable.next(traceId)
     } catch (e) {
       Logger.error(e.stack)
