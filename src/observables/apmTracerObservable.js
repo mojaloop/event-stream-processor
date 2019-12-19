@@ -33,10 +33,10 @@ const updateTraceToCache = async (key, trace, traceId) => {
 }
 
 const extractContextObservable = ({ message }) => {
-  Logger.debug(`Received event message :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
-  Logger.info(`Received Event :: type: ${message.metadata.trace.tags.transactionType} :: action: ${message.metadata.transactionType.tags.transactionAction} *** Span :: traceId: ${message.metadata.trace.traceId} :: spanId: ${message.metadata.trace.spanId} :: tracestate: ${message.metadata.trace.tags.tracestate}`)
   return Rx.Observable.create(observable => {
     try {
+      Logger.debug(`Received event message :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
+      Logger.info(`Received Event :: type: ${message.value.metadata.trace.tags.transactionType} :: action: ${message.value.metadata.trace.tags.transactionAction} *** Span :: traceId: ${message.value.metadata.trace.traceId} :: spanId: ${message.value.metadata.trace.spanId} :: tracestate: ${message.value.metadata.trace.tags.tracestate}`)
       const spanContext = Tracer.extractContextFromMessage(message.value)
       observable.next({ spanContext, state: message.value.metadata.event.state, content: message.value.content })
     } catch (e) {
