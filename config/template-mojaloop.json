@@ -172,6 +172,15 @@
                         "ignore_above": 256
                       }
                     }
+                  },
+                  "tracestate": {
+                    "type": "text",
+                    "fields": {
+                      "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                      }
+                    }
                   }
                 }
               },
