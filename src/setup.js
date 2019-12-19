@@ -55,7 +55,7 @@ const setup = async () => {
 
   const topicObservable = Rx.Observable.create((observer) => {
     consumer.on('message', async (message) => {
-      // Logger.info(`Central-Event-Processor :: Topic ${topicName} :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
+      Logger.debug(`Central-Event-Processor :: Topic ${topicName} :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
       observer.next({ message })
       if (!Consumer.isConsumerAutoCommitEnabled(topicName)) {
         consumer.commitMessageSync(message)
@@ -66,15 +66,10 @@ const setup = async () => {
   const sharedMessageObservable = topicObservable.pipe(share(), catchError(e => { return Rx.onErrorResumeNext(sharedMessageObservable) }))
 
   sharedMessageObservable.subscribe(async props => {
-    // Observables.fluentdObservable(props).subscribe({
-    //   next: v => Logger.info(v),
-    //   error: (e) => Logger.error(e.stack),
-    //   completed: () => Logger.info('fluentd log completed')
-    // })
     Observables.elasticsearchClientObservable(props).subscribe({
-      next: v => Logger.info(v),
+      next: v => Logger.debug(v),
       error: (e) => Logger.error(e.stack),
-      completed: () => Logger.info('elastic API log completed')
+      completed: () => Logger.debug('elastic API log completed')
     })
   })
 
@@ -89,10 +84,10 @@ const setup = async () => {
 
   tracingObservable.subscribe({
     next: traceId => {
-      Logger.info(`traceId ${traceId} sent to APM`)
+      Logger.debug(`traceId ${traceId} sent to APM`)
     },
     error: (e) => Logger.error(e.stack),
-    completed: () => Logger.info('trace info sent')
+    completed: () => Logger.debug('trace info sent')
   })
 }
 
