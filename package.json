@@ -38,7 +38,7 @@
     "@mojaloop/central-services-health": "8.3.0",
     "@mojaloop/central-services-logger": "8.6.0",
     "@mojaloop/central-services-shared": "8.7.1",
-    "@mojaloop/central-services-stream": "8.7.0",
+    "@mojaloop/central-services-stream": "8.7.1",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.1-snapshot",
     "@mojaloop/event-sdk": "8.6.2",
