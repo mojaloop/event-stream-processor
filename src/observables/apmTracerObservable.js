@@ -33,7 +33,8 @@ const updateTraceToCache = async (key, trace, traceId) => {
 }
 
 const extractContextObservable = ({ message }) => {
-  Logger.info(`Received trace :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
+  Logger.debug(`Received event message :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
+  Logger.info(`Received Event :: type: ${message.metadata.trace.tags.transactionType} :: action: ${message.metadata.transactionType.tags.transactionAction} *** Span :: traceId: ${message.metadata.trace.traceId} :: spanId: ${message.metadata.trace.spanId} :: tracestate: ${message.metadata.trace.tags.tracestate}`)
   return Rx.Observable.create(observable => {
     try {
       const spanContext = Tracer.extractContextFromMessage(message.value)
@@ -190,7 +191,7 @@ const sendSpanToApm = currentSpan => {
   const traceIdBuffer = Buffer.from(traceId, 'hex')
   const spanIdBuffer = Buffer.from(spanId, 'hex')
   const parentSpanIdBuffer = parentSpanId && Buffer.from(parentSpanId, 'hex')
-  Logger.info(`version: ${versionBuffer.toString('hex')} traceId: ${traceId} spanId: ${spanId} parentSpanId: ${parentSpanId} flags: ${flagsBuffer.toString('hex')}`)
+  Logger.info(`Send span to APM :: traceId: ${traceId} :: spanId: ${spanId} :: parentSpanId: ${parentSpanId} :: flags: ${flagsBuffer.toString('hex')} *** Event :: type: ${tags.transactionType} :: action: ${tags.transactionAction}`)
   const context =
     parentSpanIdBuffer
       ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))

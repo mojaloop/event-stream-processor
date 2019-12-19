@@ -32,23 +32,10 @@
 
 'use strict'
 
-const flogger = require('fluent-logger')
 const Config = require('../../lib/config')
 const Logger = require('@mojaloop/central-services-logger')
 const Mustache = require('mustache')
 const Moment = require('moment')
-
-const initLogger = async (prefix, options) => {
-  flogger.configure(prefix, options)
-
-  flogger.on('connect', () => {
-    Promise.resolve({ status: 'succes' })
-  })
-
-  flogger.on('error', (error) => {
-    Promise.reject(error)
-  })
-}
 
 const elasticsearch = require('elasticsearch')
 
@@ -98,7 +85,5 @@ const ElasticSearchClient = (() => {
 })()
 
 module.exports = {
-  initLogger,
-  logger: flogger,
   ElasticSearchClient
 }

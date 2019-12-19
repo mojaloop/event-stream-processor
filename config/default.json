@@ -60,7 +60,7 @@
   },
   "EFK_CLIENT": {
     "host": "dev1-elasticsearch.mojaloop.live",
-    "log": "trace",
+    "log": "error",
     "index": {
       "name": "mojaloop",
       "template": "{{index}}-{{date}}"
