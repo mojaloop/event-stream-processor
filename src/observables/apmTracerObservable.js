@@ -36,7 +36,7 @@ const extractContextObservable = ({ message }) => {
   return Rx.Observable.create(observable => {
     try {
       Logger.debug(`Received event message :: Payload: \n${JSON.stringify(message.value, null, 2)}`)
-      Logger.info(`Received Event :: type: ${message.value.metadata.trace.tags.transactionType} :: action: ${message.value.metadata.trace.tags.transactionAction} *** Span :: traceId: ${message.value.metadata.trace.traceId} :: spanId: ${message.value.metadata.trace.spanId} :: tracestate: ${message.value.metadata.trace.tags.tracestate}`)
+      Logger.info(`Received Event :: transactionId: ${message.value.metadata.trace.tags.transactionId} :: type: ${message.value.metadata.trace.tags.transactionType} :: action: ${message.value.metadata.trace.tags.transactionAction} *** Span :: traceId: ${message.value.metadata.trace.traceId} :: spanId: ${message.value.metadata.trace.spanId} :: tracestate: ${message.value.metadata.trace.tags.tracestate}`)
       const spanContext = Tracer.extractContextFromMessage(message.value)
       observable.next({ spanContext, state: message.value.metadata.event.state, content: message.value.content })
     } catch (e) {
