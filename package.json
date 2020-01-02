@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "8.7.5-snapshot",
+  "version": "8.7.6-snapshot",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "main": "app.js",
   "scripts": {

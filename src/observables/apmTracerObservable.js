@@ -21,12 +21,20 @@ const initializeCache = async () => {
   return true
 }
 
-const updateTraceToCache = async (key, trace, traceId) => {
+const getKey = (traceId, tags) => {
+  const incomingVendor = (!!tags && !!tags.tracestate) ? (tags.tracestate).split(',')[0].split('=')[0] : null
+  return {
+    segment: `${Config.CACHE.segment}`,
+    id: incomingVendor ? `${traceId}_${incomingVendor}` : traceId
+  }
+}
+
+const updateTraceToCache = async (key, trace) => {
   try {
     const currentTrace = await client.get(key)
-    if (currentTrace && (currentTrace.ttl > (Config.CACHE.ttl - Config.CACHE.expectSpanTimeout) && schedulers[traceId] && schedulers[traceId].id)) schedulers[traceId].unsubscribe()
+    if (currentTrace && (currentTrace.ttl > (Config.CACHE.ttl - Config.CACHE.expectSpanTimeout) && schedulers[key.id] && schedulers[key.id].id)) schedulers[key.id].unsubscribe()
     await client.set(key, trace, Config.CACHE.ttl)
-    schedulers[traceId] = Rx.asyncScheduler.schedule(finishStaleTrace, Config.CACHE.expectSpanTimeout, traceId)
+    schedulers[key.id] = Rx.asyncScheduler.schedule(finishStaleTrace, Config.CACHE.expectSpanTimeout, key.id)
   } catch (e) {
     Logger.error(e.stack)
   }
@@ -49,11 +57,7 @@ const extractContextObservable = ({ message }) => {
 const cacheSpanContextObservable = ({ spanContext, state, content }) => {
   return Rx.Observable.create(async observable => {
     const { traceId, parentSpanId, tags, service, spanId } = spanContext
-
-    const key = {
-      segment: `${Config.CACHE.segment}`,
-      id: traceId
-    }
+    const key = getKey(traceId, tags)
     const isStartSpan = () => {
       const { transactionType, transactionAction } = tags
       if (Config.SPAN.START_CRITERIA[transactionType]) {
@@ -85,7 +89,7 @@ const cacheSpanContextObservable = ({ spanContext, state, content }) => {
         }
         cachedTraceItem.spans[spanId] = { spanContext, state, content }
         await updateTraceToCache(key, cachedTraceItem, traceId)
-        observable.next({ traceId, spanId })
+        observable.next({ traceId, tags, spanId })
       }
       // await client.set(key, cachedTrace, Config.CACHE.ttl)
     } catch (e) {
@@ -95,12 +99,9 @@ const cacheSpanContextObservable = ({ spanContext, state, content }) => {
   })
 }
 
-const findLastSpanObservable = ({ traceId, latestSpanId }) => {
+const findLastSpanObservable = ({ traceId, tags, latestSpanId }) => {
   return Rx.Observable.create(async observable => {
-    const key = {
-      segment: `${Config.CACHE.segment}`,
-      id: traceId
-    }
+    const key = getKey(traceId, tags)
 
     const cachedTrace = (await client.get(key)).item
     if (!cachedTrace) {
@@ -145,7 +146,7 @@ const findLastSpanObservable = ({ traceId, latestSpanId }) => {
       if (isLastSpan() || Config.SPAN.END_CRITERIA.exceptionList.includes(service)) { // TODO remove exceptionList when all traces have right tags
         cachedTrace.lastSpan = spanContext
         await updateTraceToCache(key, cachedTrace, traceId)
-        return observable.next(traceId)
+        return observable.next({ traceId, tags })
       }
     }
     await updateTraceToCache(key, cachedTrace, traceId)
@@ -153,11 +154,8 @@ const findLastSpanObservable = ({ traceId, latestSpanId }) => {
   })
 }
 
-const recreateTraceObservable = (traceId) => {
-  const key = {
-    segment: `${Config.CACHE.segment}`,
-    id: traceId
-  }
+const recreateTraceObservable = ({ traceId, tags }) => {
+  const key = getKey(traceId, tags)
   return Rx.Observable.create(async observable => {
     try {
       const cachedTrace = (await client.get(key)).item
@@ -219,11 +217,8 @@ const sendSpanToApm = currentSpan => {
 }
 
 const sendTraceToApmObservable = (trace) => {
-  const traceId = trace[0].spanContext.traceId
-  const key = {
-    segment: `${Config.CACHE.segment}`,
-    id: traceId
-  }
+  const { traceId, tags } = trace[0].spanContext
+  const key = getKey(traceId, tags)
   return Rx.Observable.create(async observable => {
     try {
       for (const currentSpan of trace) {
@@ -242,10 +237,10 @@ const sendTraceToApmObservable = (trace) => {
   })
 }
 
-const finishStaleTrace = async (traceId) => {
+const finishStaleTrace = async (keyId) => {
   const key = {
     segment: `${Config.CACHE.segment}`,
-    id: traceId
+    id: keyId
   }
   try {
     const cachedTraceElement = await client.get(key)
@@ -276,7 +271,7 @@ const finishStaleTrace = async (traceId) => {
     for (const span of resultTrace) {
       sendSpanToApm(span)
     }
-    delete schedulers[traceId]
+    delete schedulers[keyId]
     await client.drop(key)
   } catch (e) {
     Logger.error(e.stack)
