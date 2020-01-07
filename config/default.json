@@ -2,7 +2,12 @@
   "CACHE": {
     "ttl": 300000,
     "segment": "trace",
-    "expectSpanTimeout": 270000
+    "expectSpanTimeout": 270000,
+    "CATBOX_MEMORY": {
+      "partition": "trace-cache",
+      "maxByteSize": 524288000,
+      "minCleanupIntervalMsec": 100000
+    }
   },
   "SPAN": {
     "START_CRITERIA": {
