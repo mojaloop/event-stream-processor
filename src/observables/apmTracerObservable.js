@@ -10,8 +10,7 @@ const { Tracer, EventStatusType } = require('@mojaloop/event-sdk')
 const { merge } = require('lodash')
 const { tracer } = require('../lib/tracer')
 
-const partition = 'trace-cache'
-const clientOptions = { partition }
+const clientOptions = Config.CACHE.CATBOX_MEMORY
 let client
 const schedulers = {}
 
