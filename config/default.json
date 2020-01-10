@@ -56,7 +56,7 @@
     }
   },
   "efk": {
-    "host": "dev1-fluentd.mojaloop.live",
+    "host": "perf1-fluentd.mojaloop.live",
     "port": 24224,
     "timeout": 3.0,
     "reconnectInterval": 600,
@@ -64,8 +64,9 @@
     "namespace": "logstash"
   },
   "EFK_CLIENT": {
-    "host": "dev1-elasticsearch.mojaloop.live",
+    "host": "perf1-elasticsearch.mojaloop.live",
     "log": "error",
+    "compression": "gzip",
     "index": {
       "name": "mojaloop",
       "template": "{{index}}-{{date}}"
@@ -73,7 +74,7 @@
   },
   "APM": {
     "serviceName": "event-stream-processor",
-    "serverUrl": "http://dev1-apm.mojaloop.live:80",
+    "serverUrl": "http://perf1-apm.mojaloop.live:80",
     "captureErrorLogStackTraces": "never"
   },
   "PORT": 3082,

@@ -72,7 +72,6 @@ const setup = async () => {
       completed: () => Logger.debug('elastic API log completed')
     })
   })
-
   const tracingObservable = sharedMessageObservable.pipe(
     filter(props => props.message.value.metadata.event.type === 'trace'),
     flatMap(Observables.TraceObservable.extractContextObservable),

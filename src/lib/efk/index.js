@@ -58,10 +58,8 @@ const ElasticSearchClient = (() => {
   let currentDate
   const createInstance = async () => {
     try {
-      const client = new elasticsearch.Client({
-        host: Config.EFK_CLIENT.host,
-        log: Config.EFK_CLIENT.log
-      })
+      const { host, log, compression } = Config.EFK_CLIENT
+      const client = new elasticsearch.Client({ host, log, compression })
       const resultPing = await client.ping({
         // ping usually has a 3000ms timeout
         requestTimeout: 1000
