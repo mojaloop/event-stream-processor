@@ -40,7 +40,6 @@ const updateTraceToCache = async (key, trace) => {
 }
 
 const extractContextObservable = ({ message }) => {
-  console.log(Date.now().toLocaleString())
   return Rx.Observable.create(observable => {
     try {
       Logger.debug(`Received event message :: Payload: \n${JSON.stringify(message.value, null, 2)}`)

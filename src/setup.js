@@ -34,13 +34,15 @@ const Consumer = Util.Consumer
 const Enum = require('@mojaloop/central-services-shared').Enum
 const Logger = require('@mojaloop/central-services-logger')
 const Rx = require('rxjs')
-const { share, filter, flatMap, catchError } = require('rxjs/operators')
+const { share, filter, flatMap, catchError, concatMap, delay } = require('rxjs/operators')
 const Config = require('./lib/config')
 const HealthCheck = require('@mojaloop/central-services-shared').HealthCheck.HealthCheck
 const { createHealthCheckServer, defaultHealthHandler } = require('@mojaloop/central-services-health')
 const packageJson = require('../package.json')
 const { getSubServiceHealthBroker } = require('./lib/healthCheck/subServiceHealth')
 const Observables = require('./observables')
+const { shouldLogToEfk } = require('./lib/util/efk')
+
 const { initializeCache } = Observables.TraceObservable
 
 const setup = async () => {
@@ -65,13 +67,23 @@ const setup = async () => {
 
   const sharedMessageObservable = topicObservable.pipe(share(), catchError(e => { return Rx.onErrorResumeNext(sharedMessageObservable) }))
 
-  sharedMessageObservable.subscribe(async props => {
+  const elasticLoggerObservable = sharedMessageObservable.pipe(
+    filter(props => shouldLogToEfk(props.message.value.metadata.event.type, props.message.value.metadata.event.action)),
+    concatMap(x => Rx.of(x).pipe(delay(Config.EFK_CLIENT.delayMs))),
+    catchError(e => { return Rx.onErrorResumeNext(elasticLoggerObservable) }))
+
+  const delayedStreamObservable = elasticLoggerObservable.pipe(
+    concatMap(x => Rx.of(x).pipe(delay(Config.EFK_CLIENT.delayMs))),
+    catchError(e => { return Rx.onErrorResumeNext(delayedStreamObservable) }))
+
+  elasticLoggerObservable.subscribe(props => {
     Observables.elasticsearchClientObservable(props).subscribe({
-      next: v => Logger.debug(v),
+      next: v => { Logger.info(`==> Elastic ${JSON.stringify(v)}<==`) },
       error: (e) => Logger.error(e.stack),
       completed: () => Logger.debug('elastic API log completed')
     })
   })
+
   const tracingObservable = sharedMessageObservable.pipe(
     filter(props => props.message.value.metadata.event.type === 'trace'),
     flatMap(Observables.TraceObservable.extractContextObservable),

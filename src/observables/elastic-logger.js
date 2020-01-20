@@ -61,6 +61,7 @@ const Logger = require('@mojaloop/central-services-logger')
 const elasticsearchClientObservable = ({ message }) => {
   return Rx.Observable.create(async observable => {
     try {
+      Logger.info(`EFK request time:: ${new Date().toISOString()}`)
       const client = await ElasticSearchClient.getInstance()
       await client.index({
         index: ElasticSearchClient.getIndex(),
