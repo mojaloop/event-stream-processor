@@ -158,12 +158,28 @@ const recreateTraceObservable = ({ traceId, tags }) => {
   return Rx.Observable.create(async observable => {
     try {
       const cachedTrace = (await client.get(key)).item
+
+      const findLooseSpans = (parentSpan, currentSpan = null) => {
+        const looseSpans = []
+        for (const span of Object.values(cachedTrace.spans)) {
+          if (span.spanContext.parentSpanId === parentSpan.spanContext.spanId && (!currentSpan || (span.spanContext.spanId !== currentSpan.spanContext.spanId))) {
+            looseSpans.push(span)
+            delete cachedTrace.spans[span.spanContext.spanId]
+          }
+        }
+        return looseSpans
+      }
+
       if (cachedTrace.lastSpan && cachedTrace.masterSpan) {
         let currentSpan = cachedTrace.spans[cachedTrace.lastSpan.spanId]
         const resultTrace = [currentSpan]
+        const looseSpansOfLastSpan = findLooseSpans(currentSpan)
+        looseSpansOfLastSpan.forEach(span => resultTrace.push(span))
         for (let i = 0; i < Object.keys(cachedTrace.spans).length; i++) {
           const parentSpan = cachedTrace.spans[currentSpan.spanContext.parentSpanId]
           if (!parentSpan) break
+          const looseSpans = findLooseSpans(parentSpan, currentSpan)
+          looseSpans.forEach(span => resultTrace.unshift(span))
           resultTrace.unshift(parentSpan)
           currentSpan = parentSpan
         }
