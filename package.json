@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "8.7.7-snapshot",
+  "version": "9.1.0-snapshot",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "main": "app.js",
   "scripts": {
@@ -33,31 +33,31 @@
   },
   "homepage": "https://github.com/mojaloop/event-stream-processor#readme",
   "dependencies": {
-    "@hapi/catbox": "10.2.3",
-    "@hapi/catbox-memory": "4.1.1",
+    "@hapi/catbox": "11.0.1",
+    "@hapi/catbox-memory": "5.0.0",
     "@mojaloop/central-services-health": "8.3.0",
-    "@mojaloop/central-services-logger": "8.6.0",
-    "@mojaloop/central-services-shared": "8.7.1",
+    "@mojaloop/central-services-logger": "9.1.0",
+    "@mojaloop/central-services-shared": "9.1.1",
     "@mojaloop/central-services-stream": "8.7.2",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.1-snapshot",
-    "@mojaloop/event-sdk": "8.6.2",
+    "@mojaloop/event-sdk": "8.7.0",
     "deserialize-error": "0.0.3",
-    "elasticsearch": "16.5.0",
-    "fluent-logger": "3.4.0",
+    "elasticsearch": "16.6.0",
+    "fluent-logger": "3.4.1",
     "lodash": "4.17.15",
     "moment": "2.24.0",
-    "mustache": "3.1.0",
+    "mustache": "4.0.0",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
-    "rxjs": "6.5.3",
-    "rxjs-compat": "6.5.3",
+    "rxjs": "6.5.4",
+    "rxjs-compat": "6.5.4",
     "traceparent": "1.0.0"
   },
   "devDependencies": {
     "faucet": "0.0.1",
     "pre-commit": "1.2.2",
     "standard": "14.3.1",
-    "tape": "4.11.0"
+    "tape": "4.13.0"
   }
 }
