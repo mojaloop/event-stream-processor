@@ -1,4 +1,4 @@
-FROM node:12.16.0-alpine
+FROM mhart/alpine-node:12.16.0
 USER root
 
 WORKDIR /opt/event-stream-processor
