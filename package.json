@@ -11,6 +11,8 @@
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
     "test:coverage-check": "npm run test:coverage && istanbul check-coverage",
+    "audit:resolve": "SHELL=sh resolve-audit && sed -i 's/: \"^/: \"/' package.json",
+    "audit:check": "SHELL=sh check-audit",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u"
   },
@@ -56,6 +58,7 @@
   },
   "devDependencies": {
     "faucet": "0.0.1",
+    "npm-audit-resolver": "2.2.0",
     "npm-check-updates": "4.0.1",
     "pre-commit": "1.2.2",
     "standard": "14.3.1",
