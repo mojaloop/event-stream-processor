@@ -240,6 +240,7 @@ jobs:
     steps:
       - checkout
       - deploy-kube/setup_and_run:
+          # TODO: fix this, event-stream-processor isn't in the root values.yml file, so can't be overriden
           helm_set_values: |
             --set emailnotifier.image.repository=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME \
             --set emailnotifier.image.tag=$CIRCLE_TAG 
