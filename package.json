@@ -37,7 +37,7 @@
   "dependencies": {
     "@hapi/catbox": "11.1.0",
     "@hapi/catbox-memory": "5.0.0",
-    "@mojaloop/central-services-health": "9.2.0",
+    "@mojaloop/central-services-health": "10.1.0",
     "@mojaloop/central-services-logger": "9.5.1",
     "@mojaloop/central-services-shared": "9.5.5",
     "@mojaloop/central-services-stream": "9.5.0",
@@ -48,7 +48,7 @@
     "elasticsearch": "16.7.1",
     "fluent-logger": "3.4.1",
     "lodash": "4.17.15",
-    "moment": "2.24.0",
+    "moment": "2.25.0",
     "mustache": "4.0.1",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
@@ -62,6 +62,6 @@
     "npm-check-updates": "4.1.2",
     "pre-commit": "1.2.2",
     "standard": "14.3.3",
-    "tape": "4.13.2"
+    "tape": "5.0.0"
   }
 }
