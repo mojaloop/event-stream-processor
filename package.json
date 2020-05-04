@@ -11,7 +11,7 @@
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
     "test:coverage-check": "npm run test:coverage && istanbul check-coverage",
-    "audit:resolve": "SHELL=sh resolve-audit && sed -i 's/: \"^/: \"/' package.json",
+    "audit:resolve": "SHELL=sh resolve-audit",
     "audit:check": "SHELL=sh check-audit",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u"
@@ -48,7 +48,7 @@
     "elasticsearch": "16.7.1",
     "fluent-logger": "3.4.1",
     "lodash": "4.17.15",
-    "moment": "2.25.0",
+    "moment": "2.25.1",
     "mustache": "4.0.1",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
