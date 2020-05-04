@@ -29,7 +29,7 @@ _Note: only needed if you need to remove the template_
   1. Elasticsearch returns field type error when document is tried to be insserted. If a custom template is not presented into Elasticsearch, when the first document is inserted, Elasticsearch assumes data model and creates index schema and won't work correctly with mojaloop. 
   
   Error returned by Elasticsearch:
-  ```
+  ```json
   {
     "error": "Content-Type header [text/plain] is not supported",
     "status": 406
