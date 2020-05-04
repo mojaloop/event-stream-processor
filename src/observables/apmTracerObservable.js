@@ -88,7 +88,7 @@ const cacheSpanContextObservable = ({ spanContext, state, content }) => {
         }
         cachedTraceItem.spans[spanId] = { spanContext, state, content }
         await updateTraceToCache(key, cachedTraceItem, traceId)
-        observable.next({ traceId, tags, spanId })
+        observable.next({ traceId, tags, latestSpanId: spanId })
       }
       // await client.set(key, cachedTrace, Config.CACHE.ttl)
     } catch (e) {
@@ -159,17 +159,32 @@ const recreateTraceObservable = ({ traceId, tags }) => {
     try {
       const cachedTrace = (await client.get(key)).item
       if (cachedTrace.lastSpan && cachedTrace.masterSpan) {
-        let currentSpan = cachedTrace.spans[cachedTrace.lastSpan.spanId]
-        const resultTrace = [currentSpan]
-        for (let i = 0; i < Object.keys(cachedTrace.spans).length; i++) {
-          const parentSpan = cachedTrace.spans[currentSpan.spanContext.parentSpanId]
-          if (!parentSpan) break
-          resultTrace.unshift(parentSpan)
-          currentSpan = parentSpan
+        const sortedSpans = Array.from(Object.values(cachedTrace.spans)).sort((a, b) => a.spanContext.finishTimestamp > b.spanContext.finishTimestamp ? 1 : a.spanContext.finishTimestamp < b.spanContext.finishTimestamp ? -1 : 0)
+        let previousSpan
+        let currentSpan
+        const parentFound = []
+        for (const [index, span] of sortedSpans.entries()) {
+          currentSpan = span
+          if (currentSpan.spanContext.service === 'master-transfer' && !currentSpan.spanContext.parentSpanId) {
+            sortedSpans[index].spanContext.finishTimestamp = sortedSpans[sortedSpans.length - 1].spanContext.finishTimestamp
+            sortedSpans.unshift(currentSpan)
+            sortedSpans.splice(index, 1)
+            previousSpan = span
+          } else {
+            if (currentSpan.parentSpanId === previousSpan.spanId) {
+              parentFound.push(previousSpan.spanContext.spanId)
+              previousSpan = currentSpan
+            } else if (!parentFound.includes(currentSpan.spanContext.spanId)) {
+              break
+            } else {
+              previousSpan = currentSpan
+            }
+          }
         }
-        if (cachedTrace.masterSpan.spanId === currentSpan.spanContext.spanId) {
-          resultTrace[0].spanContext.finishTimestamp = resultTrace[resultTrace.length - 1].spanContext.finishTimestamp
-          observable.next(resultTrace)
+        if (parentFound.length > 0) {
+          return observable.next(sortedSpans)
+        } else {
+          return observable.complete()
         }
       }
     } catch (e) {

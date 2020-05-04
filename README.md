@@ -24,3 +24,29 @@ _Note: only needed if you need to remove the template_
  curl -X GET "http://elasticsearch:9200/_template/mojatemplate"
  ```
  
+ #### 1.1.4 Known Issues
+
+  1. Elasticsearch returns field type error when document is tried to be insserted. If a custom template is not presented into Elasticsearch, when the first document is inserted, Elasticsearch assumes data model and creates index schema and won't work correctly with mojaloop. 
+  
+  Error returned by Elasticsearch:
+  ```json
+  {
+    "error": "Content-Type header [text/plain] is not supported",
+    "status": 406
+  }
+  ```
+
+  To fix the issue, you need to delete all old indexes. Even the index might not appear on the interface
+     
+     1. Get indexes starting with mojaloop
+   
+     ```curl
+     curl -X GET 'elasticsearch:9200/mojaloop*'
+     ```
+
+     2. Delete index by name
+   
+     ```curl
+     curl -X DELETE 'elasticsearch:9200/mojaloop-2020.04.30'
+     ```
+   
