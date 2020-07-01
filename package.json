@@ -11,8 +11,8 @@
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
     "test:coverage-check": "npm run test:coverage && istanbul check-coverage",
-    "audit:resolve": "SHELL=sh resolve-audit",
-    "audit:check": "SHELL=sh check-audit",
+    "audit:resolve": "SHELL=sh resolve-audit --production",
+    "audit:check": "SHELL=sh check-audit --production",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u"
   },
@@ -37,18 +37,18 @@
   "dependencies": {
     "@hapi/catbox": "11.1.0",
     "@hapi/catbox-memory": "5.0.0",
-    "@mojaloop/central-services-health": "10.1.0",
-    "@mojaloop/central-services-logger": "9.5.1",
-    "@mojaloop/central-services-shared": "9.5.5",
+    "@mojaloop/central-services-health": "10.4.0",
+    "@mojaloop/central-services-logger": "10.4.0",
+    "@mojaloop/central-services-shared": "10.5.2",
     "@mojaloop/central-services-stream": "9.5.0",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.1-snapshot",
-    "@mojaloop/event-sdk": "9.5.2",
+    "@mojaloop/event-sdk": "10.4.0",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.7.1",
     "fluent-logger": "3.4.1",
     "lodash": "4.17.15",
-    "moment": "2.25.1",
+    "moment": "2.27.0",
     "mustache": "4.0.1",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
@@ -59,9 +59,9 @@
   "devDependencies": {
     "faucet": "0.0.1",
     "npm-audit-resolver": "2.2.0",
-    "npm-check-updates": "4.1.2",
+    "npm-check-updates": "7.0.1",
     "pre-commit": "1.2.2",
-    "standard": "14.3.3",
-    "tape": "5.0.0"
+    "standard": "14.3.4",
+    "tape": "5.0.1"
   }
 }
