@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "9.5.0-snapshot",
+  "version": "11.0.0-snapshot",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "main": "app.js",
   "scripts": {
@@ -37,7 +37,7 @@
   "dependencies": {
     "@hapi/catbox": "11.1.1",
     "@hapi/catbox-memory": "5.0.0",
-    "@mojaloop/central-services-health": "^10.6.0",
+    "@mojaloop/central-services-health": "10.6.0",
     "@mojaloop/central-services-logger": "10.6.0",
     "@mojaloop/central-services-shared": "11.4.3",
     "@mojaloop/central-services-stream": "10.6.0",
