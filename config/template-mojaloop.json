@@ -2,7 +2,9 @@
   "index_patterns": ["mojaloop*"],
   "settings": {
     "number_of_shards": 1,
-    "number_of_replicas": 1
+    "number_of_replicas": 1,
+    "index.lifecycle.name": "mojaloop_rollover_policy", 
+    "index.lifecycle.rollover_alias": "mojaloop_rollover_policy_alias" 
   },
   "mappings": {
     "_source": {

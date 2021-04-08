@@ -1,52 +1,54 @@
 # event-stream-processor
-** EXPERIMENTAL** Event Stream Processor for Event Stream (logs, audits, errors, trace, etc)
+** EXPERIMENTAL** Event Stream Processor (ESP) for Event Stream (logs, audits, errors, trace, etc)
 
 ## 1. Pre-requisites
 
 ### 1.1 Elasticsearch
 
-Ensure that you have created the `mojatemplate` based on the following config: [template](./config/template-mojaloop.json).
+Ensure that you have created the following resources prior to deploying the ESP component:
+1. [Create a Policy](#1111-create) with the desired Rollover configurations: [policy-rollover-mojaloop.json](./config/policy-rollover-mojaloop.json)
+2. [Create a Template](#1121-create) to associate the Policy Settings to the Logstash index based on the following config: [template-mojaloop.json](./config/template-mojaloop.json)
 
-#### 1.1.1 Create Template
- ```curl
- curl -X PUT "http://elasticsearch:9200/_template/mojatemplate?pretty" -H 'Content-Type: application/json' -d @config/template-mojaloop.json'
- ```
+> __NOTE__:<br/>
+> If ESP component is running prior to configuring the above template, the index mapping will be auto-created and will not take effect.
 
-#### 1.1.2 Delete Template
+<br/>
+
+#### 1.1.1 Mojaloop Index Rollover Policy
+
+##### 1.1.1.1 Create
+```curl
+curl -X PUT "http://elasticsearch:9200/_ilm/policy/mojaloop_rollover_policy?pretty" -H 'Content-Type: application/json' -d @config/policy-rollover-mojaloop.json
+```
+
+##### 1.1.1.2 Delete
+_Note: only needed if you need to remove the policy_
+```curl
+curl -X DELETE "http://elasticsearch:9200/_ilm/policy/mojaloop_rollover_policy?"
+```
+
+#### 1.1.1.3 Get
+_Note: useful for debugging issues_
+```curl
+curl -X GET "http://elasticsearch:9200/_ilm/policy/mojaloop_rollover_policy?"
+```
+
+#### 1.1.2 Mojaloop Index Template
+
+##### 1.1.2.1 Create
+```curl
+curl -X PUT "http://elasticsearch:9200/_template/moja_template?pretty" -H 'Content-Type: application/json' -d @config/template-mojaloop.json'
+```
+
+##### 1.1.2.2 Delete
 _Note: only needed if you need to remove the template_
  ```curl
- curl -X DELETE "http://elasticsearch:9200/_template/mojatemplate"
+ curl -X DELETE "http://elasticsearch:9200/_template/moja_template"
  ```
  
  #### 1.1.3 Get Template
  _Note: useful for debugging template issues_
  ```curl
- curl -X GET "http://elasticsearch:9200/_template/mojatemplate"
+ curl -X GET "http://elasticsearch:9200/_template/moja_template"
  ```
  
- #### 1.1.4 Known Issues
-
-  1. Elasticsearch returns field type error when document is tried to be insserted. If a custom template is not presented into Elasticsearch, when the first document is inserted, Elasticsearch assumes data model and creates index schema and won't work correctly with mojaloop. 
-  
-  Error returned by Elasticsearch:
-  ```json
-  {
-    "error": "Content-Type header [text/plain] is not supported",
-    "status": 406
-  }
-  ```
-
-  To fix the issue, you need to delete all old indexes. Even the index might not appear on the interface
-     
-     1. Get indexes starting with mojaloop
-   
-     ```curl
-     curl -X GET 'elasticsearch:9200/mojaloop*'
-     ```
-
-     2. Delete index by name
-   
-     ```curl
-     curl -X DELETE 'elasticsearch:9200/mojaloop-2020.04.30'
-     ```
-   
