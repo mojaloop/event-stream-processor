@@ -42,12 +42,13 @@ curl -X PUT "http://elasticsearch:9200/_template/moja_template?pretty" -H 'Conte
 
 ##### 1.1.2.2 Delete
 _Note: only needed if you need to remove the template_
-```curl
-curl -X DELETE "http://elasticsearch:9200/_template/moja_template"
-```
-
- ##### 1.1.2.3 Get
- _Note: useful for debugging issues_
-```curl
-curl -X GET "http://elasticsearch:9200/_template/moja_template"
-```
+ ```curl
+ curl -X DELETE "http://elasticsearch:9200/_template/mojatemplate"
+ ```
+ 
+ #### 1.1.3 Get Template
+ _Note: useful for debugging template issues_
+ ```curl
+ curl -X GET "http://elasticsearch:9200/_template/mojatemplate"
+ ```
+ 

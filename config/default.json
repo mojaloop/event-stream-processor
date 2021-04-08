@@ -2,7 +2,12 @@
   "CACHE": {
     "ttl": 300000,
     "segment": "trace",
-    "expectSpanTimeout": 270000
+    "expectSpanTimeout": 270000,
+    "CATBOX_MEMORY": {
+      "partition": "trace-cache",
+      "maxByteSize": 524288000,
+      "minCleanupIntervalMsec": 100000
+    }
   },
   "SPAN": {
     "START_CRITERIA": {
@@ -10,11 +15,6 @@
         {
           "prepare": {
             "service": "ml_transfer_prepare"
-          }
-        },
-        {
-          "fulfil": {
-            "service": "ml_transfer_fulfil"
           }
         },
         {
@@ -65,7 +65,7 @@
   },
   "EFK_CLIENT": {
     "host": "dev1-elasticsearch.mojaloop.live",
-    "log": "trace",
+    "log": "error",
     "index": {
       "name": "mojaloop",
       "template": "{{index}}-{{date}}"
