@@ -29,5 +29,5 @@ const Logger = require('@mojaloop/central-services-logger')
 try {
   setup()
 } catch (err) {
-  Logger.info(`Notifier throws an error ${err}`)
+  Logger.error(`Event Stream Processor error ${err.stack}`)
 }

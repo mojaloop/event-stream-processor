@@ -69,7 +69,7 @@ const elasticsearchClientObservable = ({ message }) => {
       observable.complete()
     } catch (e) {
       observable.error(e)
-      Logger.error(e)
+      Logger.error(e.stack)
     }
   })
 }
