@@ -7,6 +7,9 @@
     "start": "WITH_SASL=0&&LD_LIBRARY_PATH=$PWD/node_modules/node-rdkafka/build/deps&& node app.js",
     "test": "npm run test:unit | faucet",
     "standard": "standard",
+    "standard:fix": "standard --fix",
+    "lint": "npm run standard",
+    "lint:fix": "npm run standard:fix",
     "test:unit": "tape 'test/unit/**/*.test.js'",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
@@ -18,7 +21,7 @@
   },
   "pre-commit": [
     "dep:check",
-    "standard"
+    "lint"
   ],
   "repository": {
     "type": "git",
@@ -36,14 +39,14 @@
   "homepage": "https://github.com/mojaloop/event-stream-processor#readme",
   "dependencies": {
     "@hapi/catbox": "11.1.1",
-    "@hapi/catbox-memory": "5.0.0",
+    "@hapi/catbox-memory": "5.0.1",
     "@mojaloop/central-services-health": "11.0.0",
-    "@mojaloop/central-services-logger": "10.6.0",
-    "@mojaloop/central-services-shared": "11.6.0",
+    "@mojaloop/central-services-logger": "10.6.1",
+    "@mojaloop/central-services-shared": "13.0.1",
     "@mojaloop/central-services-stream": "10.6.0",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.1-snapshot",
-    "@mojaloop/event-sdk": "^10.6.0",
+    "@mojaloop/event-sdk": "10.7.1",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.7.2",
     "fluent-logger": "3.4.1",
@@ -52,14 +55,15 @@
     "mustache": "4.2.0",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
-    "rxjs": "6.6.7",
+    "rxjs": "7.0.1",
     "rxjs-compat": "6.6.7",
     "traceparent": "1.0.0"
   },
   "devDependencies": {
+    "eslint": "7.26.0",
     "faucet": "0.0.1",
-    "npm-audit-resolver": "2.2.0",
-    "npm-check-updates": "11.4.1",
+    "npm-audit-resolver": "2.3.0",
+    "npm-check-updates": "11.5.11",
     "pre-commit": "1.2.2",
     "standard": "16.0.3",
     "tape": "5.2.2"
