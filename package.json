@@ -6,7 +6,10 @@
   "scripts": {
     "start": "WITH_SASL=0&&LD_LIBRARY_PATH=$PWD/node_modules/node-rdkafka/build/deps&& node app.js",
     "test": "npm run test:unit | faucet",
-    "standard": "standard",
+    "standard": "npx standard",
+    "standard:fix": "npx standard --fix",
+    "lint": "npm run standard",
+    "lint:fix": "npm run standard:fix",
     "test:unit": "tape 'test/unit/**/*.test.js'",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",

@@ -113,8 +113,8 @@ const findLastSpanObservable = ({ traceId, latestSpanId }) => {
       const errorTags = ('errorCode' in parentSpanTags)
         ? { errorCode: parentSpanTags.errorCode }
         : ('code' in parentSpan.state && parentSpan.state.status === EventStatusType.failed)
-          ? { errorCode: parentSpan.state.code }
-          : null
+            ? { errorCode: parentSpan.state.code }
+            : null
       const masterTags = ('masterSpan' in parentSpanTags) ? { masterSpan: parentSpanTags.masterSpan } : null
       const tagsToApply = merge({ ...errorTags }, { tags: { ...tags, ...masterTags } })
       cachedTrace.spans[spanId] = { spanContext: merge(tagsToApply, { ...spanContext }), state, content }
