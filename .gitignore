@@ -65,3 +65,10 @@ typings/
 
 # VSCode directory
 .vscode
+
+# devspace configuration
+.devspace
+devspace*
+
+# IGNORE
+*IGNORE*
