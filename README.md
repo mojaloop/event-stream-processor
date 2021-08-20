@@ -2,6 +2,13 @@
 
 **EXPERIMENTAL** Event Stream Processor (ESP) for Event Stream (logs, audits, errors, trace, etc)
 
+## Todo
+
+- Improve unit tests.
+- Improve code-coverage to 90% across the board: [.nycrc.yml](./.nycrc.yml).
+- Add NPM script `test` as a `pre-commit` in the package.json.
+- Update CI-CD to include unit and code-coverage checks.
+
 ## 1. Pre-requisites
 
 ### 1.1 Elasticsearch
