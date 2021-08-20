@@ -1,0 +1,19 @@
+temp-directory: "./.nyc_output"
+check-coverage: true
+per-file: true
+lines: 90
+statements: 90
+functions: 90
+# branches: 90 ## TODO: This should be un-commented to 90 once code-coverage is improved!
+all: true
+include: [
+  "src/**/*.js"
+]
+reporter: [
+  "lcov"
+]
+exclude: [
+  "src/setup.js", # Ignoring this until there is a reason to test this file. Currently just exports the library functions.
+  "src/lib/kafka/index.js", # Ignoring this until there is a reason to test this file. Currently just exports the library functions.
+  "**/node_modules/**"
+]

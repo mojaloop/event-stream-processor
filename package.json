@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "11.0.0-snapshot",
+  "version": "11.0.1-snapshot",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "main": "app.js",
   "scripts": {
@@ -12,8 +12,8 @@
     "lint:fix": "npm run standard:fix",
     "test:unit": "tape 'test/unit/**/*.test.js'",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
-    "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
-    "test:coverage-check": "npm run test:coverage && istanbul check-coverage",
+    "test:coverage": "nyc tapes -- 'test/unit/**/*.test.js' | tap-spec; nyc report ---reporter=text",
+    "test:coverage-check": "npm run test:coverage && nyc check-coverage",
     "audit:resolve": "SHELL=sh resolve-audit --production",
     "audit:check": "SHELL=sh check-audit --production",
     "dep:check": "npx ncu -e 2",
@@ -56,17 +56,19 @@
     "mustache": "4.2.0",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
-    "rxjs": "7.1.0",
+    "rxjs": "7.3.0",
     "rxjs-compat": "6.6.7",
     "traceparent": "1.0.0"
   },
   "devDependencies": {
-    "eslint": "7.29.0",
+    "eslint": "7.32.0",
     "faucet": "0.0.1",
     "npm-audit-resolver": "2.3.1",
-    "npm-check-updates": "11.7.1",
+    "npm-check-updates": "11.8.3",
+    "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
     "standard": "16.0.3",
-    "tape": "5.2.2"
+    "tap-spec": "^5.0.0",
+    "tape": "5.3.1"
   }
 }
