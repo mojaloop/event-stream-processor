@@ -52,7 +52,7 @@
     "elasticsearch": "16.7.2",
     "fluent-logger": "3.4.1",
     "lodash": "^4.17.21",
-    "moment": "2.29.1",
+    "moment": "2.29.2",
     "mustache": "4.2.0",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
