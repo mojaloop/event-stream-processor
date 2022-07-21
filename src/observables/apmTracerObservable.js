@@ -8,7 +8,8 @@ const TraceParent = require('traceparent')
 const deserializeError = require('deserialize-error')
 const { Tracer, EventStatusType } = require('@mojaloop/event-sdk')
 const { merge } = require('lodash')
-const { tracer } = require('../lib/tracer')
+// const { tracer } = require('../lib/tracer')
+const APMClient = require('../lib/apm')
 
 const clientOptions = Config.CACHE.CATBOX_MEMORY
 let client
@@ -194,39 +195,54 @@ const recreateTraceObservable = ({ traceId, tags }) => {
   })
 }
 
-const sendSpanToApm = currentSpan => {
+const sendSpanToApm = async currentSpan => {
   const { service, traceId, parentSpanId, spanId, startTimestamp, finishTimestamp, flags, tags = {}, version = 0 } = currentSpan.spanContext
   const { status, code, description } = currentSpan.state
   const { content } = currentSpan
-  const versionBuffer = Buffer.alloc(1).fill(version)
+  // const versionBuffer = Buffer.alloc(1).fill(version)
   const flagsBuffer = Buffer.alloc(1).fill(flags | 0x01)
-  const traceIdBuffer = Buffer.from(traceId, 'hex')
-  const spanIdBuffer = Buffer.from(spanId, 'hex')
-  const parentSpanIdBuffer = parentSpanId && Buffer.from(parentSpanId, 'hex')
+  // const traceIdBuffer = Buffer.from(traceId, 'hex')
+  // const spanIdBuffer = Buffer.from(spanId, 'hex')
+  // const parentSpanIdBuffer = parentSpanId && Buffer.from(parentSpanId, 'hex')
   Logger.info(`Send span to APM :: traceId: ${traceId} :: spanId: ${spanId} :: parentSpanId: ${parentSpanId} :: flags: ${flagsBuffer.toString('hex')} *** Event :: type: ${tags.transactionType} :: action: ${tags.transactionAction}`)
-  const context =
-    parentSpanIdBuffer
-      ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))
-      : new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer]))
-  const span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
-  if (status === EventStatusType.failed) {
-    span.setTag('error', true)
-    !!code && span.setTag('errorCode', code)
-    !!description && span.setTag('errorDescription', `error code: ${code} :: description: ${description}`)
-    if (!content.error) {
-      const passedError = content.payload ? new Error(content.payload) : Object.assign(new Error(description), content)
-      span.log({
-        event: 'error',
-        'error.object': passedError
-      })
-    } else {
-      span.log({
-        event: 'error',
-        'error.object': deserializeError(content.error)
-      })
-    }
+  // const context =
+  //   parentSpanIdBuffer
+  //     ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))
+  //     : new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer]))
+  
+  try {
+    const client = await APMClient.getInstance()
+    client.sendSpan({
+      name: service,
+      duration: finishTimestamp - startTimestamp,
+      start: startTimestamp,
+      type: 'db.mysql.query'
+    })
+    client.flush()
+    
+  } catch (err) {
+    Logger.error(err)
   }
-  span.finish(Date.parse(finishTimestamp))
+  
+  // const span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
+  // if (status === EventStatusType.failed) {
+  //   span.setTag('error', true)
+  //   !!code && span.setTag('errorCode', code)
+  //   !!description && span.setTag('errorDescription', `error code: ${code} :: description: ${description}`)
+  //   if (!content.error) {
+  //     const passedError = content.payload ? new Error(content.payload) : Object.assign(new Error(description), content)
+  //     span.log({
+  //       event: 'error',
+  //       'error.object': passedError
+  //     })
+  //   } else {
+  //     span.log({
+  //       event: 'error',
+  //       'error.object': deserializeError(content.error)
+  //     })
+  //   }
+  // }
+  // span.finish(Date.parse(finishTimestamp))
   return currentSpan
 }
 

@@ -24,7 +24,6 @@
  - Name Surname <name.surname@gatesfoundation.com>
 
  * ModusBox
- - Valentin Genev <valentin.genev@modusbox.com>
  - Miguel de Barros <miguel.debarros@modusbox.com>
 
  --------------
@@ -32,49 +31,25 @@
 
 'use strict'
 
-const flogger = require('fluent-logger')
-const Config = require('../../lib/config')
-const Logger = require('@mojaloop/central-services-logger')
-const Mustache = require('mustache')
-const Moment = require('moment')
+const Client = require('elastic-apm-http-client')
+const Config = require('../config')
 
-const initLogger = async (prefix, options) => {
-  flogger.configure(prefix, options)
-
-  flogger.on('connect', () => {
-    Promise.resolve({ status: 'succes' })
-  })
-
-  flogger.on('error', (error) => {
-    Promise.reject(error)
-  })
-}
-
-// const elasticsearch = require('elasticsearch')
-
-const elasticsearch = require('@elastic/elasticsearch')
-
-
-const ElasticSearchClient = (() => {
+const APMClient = (() => {
   let instance
-  let index
-  let currentDate
   const createInstance = async () => {
     try {
-      const client = new elasticsearch.Client({
-        // host: Config.EFK_CLIENT.host,
-        // log: Config.EFK_CLIENT.log
-        node: Config.EFK_CLIENT.host,
-        // agent: { 
-        //   keepAlive: true
-        // }
+      const client = new Client({
+        serviceName: Config.APM.serviceName,
+        agentName: Config.APM.serviceName,
+        agentVersion: require('../../../package.json').version,
+        userAgent: Config.APM.serviceName,
+        serverUrl: Config.APM.serverUrl,
+        keepAlive: true
       })
-      const resultPing = await client.ping(undefined, {
-        // ping usually has a 3000ms timeout
-        requestTimeout: 1000
+      client.on('request-error', err => {
+        Logger.error(`apm::onEvent - request-error - ${err}`)
       })
-      Logger.info(`elasticsearch client connection result - ${resultPing}`)
-      Logger.warn(`elasticsearch client connection result - ${resultPing}`)
+      Logger.info(`apm client connection created - ${client}`)
       return client
     } catch (e) {
       Logger.error(e.stack)
@@ -83,30 +58,21 @@ const ElasticSearchClient = (() => {
   }
 
   return {
-    getIndex: () => {
-      const nowDate = Moment()
-      if (!index || nowDate.diff(currentDate, 'days') > 0) {
-        const indexConfig = Config.EFK_CLIENT.index
-        currentDate = nowDate
-        const dateString = currentDate.format('YYYY.MM.DD')
-        index = Mustache.render(indexConfig.template, {
-          index: indexConfig.name,
-          date: dateString
-        })
-      }
-      return index
-    },
     getInstance: async () => {
       if (!instance) {
         instance = await createInstance()
       }
       return instance
+    },
+    destroy: async () => {
+      if (!instance) {
+        instance = await createInstance()
+      }
+      instance.destroy()
     }
   }
 })()
 
 module.exports = {
-  initLogger,
-  logger: flogger,
-  ElasticSearchClient
+  APMClient
 }

@@ -25,7 +25,7 @@
 'use strict'
 
 module.exports = {
-  fluentdObservable: require('./fluentd-logger').FluentdLoggerObservable,
+  // fluentdObservable: require('./fluentd-logger').FluentdLoggerObservable,
   TraceObservable: require('./apmTracerObservable'),
   elasticsearchClientObservable: require('./elastic-logger').elasticsearchClientObservable
 }

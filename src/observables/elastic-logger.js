@@ -64,12 +64,13 @@ const elasticsearchClientObservable = ({ message }) => {
       const client = await ElasticSearchClient.getInstance()
       await client.index({
         index: ElasticSearchClient.getIndex(),
-        body: addElasticsearchMetaData(message.value)
+        document: addElasticsearchMetaData(message.value)
+        // body: addElasticsearchMetaData(message.value)
       })
       observable.complete()
     } catch (e) {
       observable.error(e)
-      Logger.error(e.stack)
+      Logger.error(e)
     }
   })
 }

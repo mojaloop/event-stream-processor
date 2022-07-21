@@ -29,6 +29,8 @@ Ensure that you have created the following resources prior to deploying the ESP 
 curl -X PUT "http://elasticsearch:9200/_ilm/policy/mojaloop_rollover_policy?pretty" -H 'Content-Type: application/json' -d @config/policy-rollover-mojaloop.json
 ```
 
+curl -X PUT "http://localhost:9200/_ilm/policy/mojaloop_rollover_policy?pretty" -H 'Content-Type: application/json' -d @config/policy-rollover-mojaloop.json
+
 ##### 1.1.1.2 Delete
 
 > __NOTE__:
@@ -52,8 +54,10 @@ curl -X GET "http://elasticsearch:9200/_ilm/policy/mojaloop_rollover_policy?"
 ##### 1.1.2.1 Create
 
 ```curl
-curl -X PUT "http://elasticsearch:9200/_template/moja_template?pretty" -H 'Content-Type: application/json' -d @config/template-mojaloop.json'
+curl -X PUT "http://elasticsearch:9200/_template/moja_template?pretty" -H 'Content-Type: application/json' -d @config/template-mojaloop.json
 ```
+
+curl -X PUT "http://localhost:9200/_template/moja_template?pretty" -H 'Content-Type: application/json' -d @config/template-mojaloop.json'
 
 ##### 1.1.2.2 Delete
 

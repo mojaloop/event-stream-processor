@@ -34,7 +34,7 @@ const Consumer = Util.Consumer
 const Enum = require('@mojaloop/central-services-shared').Enum
 const Logger = require('@mojaloop/central-services-logger')
 const Rx = require('rxjs')
-const { share, filter, flatMap, catchError } = require('rxjs/operators')
+const { share, filter, mergeMap, catchError } = require('rxjs/operators')
 const Config = require('./lib/config')
 const HealthCheck = require('@mojaloop/central-services-shared').HealthCheck.HealthCheck
 const { createHealthCheckServer, defaultHealthHandler } = require('@mojaloop/central-services-health')
@@ -45,7 +45,7 @@ const { initializeCache } = Observables.TraceObservable
 
 const setup = async () => {
   await registerEventHandler()
-  await initializeCache(Config.CACHE_CONFIG)
+  await initializeCache()
   const topicName = Kafka.transformGeneralTopicName(Config.KAFKA_CONFIG.TOPIC_TEMPLATES.GENERAL_TOPIC_TEMPLATE.TEMPLATE, Enum.Events.Event.Action.EVENT)
   const consumer = Consumer.getConsumer(topicName)
   const healthCheck = new HealthCheck(packageJson, [
@@ -63,7 +63,10 @@ const setup = async () => {
     })
   })
 
-  const sharedMessageObservable = topicObservable.pipe(share(), catchError(e => { return Rx.onErrorResumeNext(sharedMessageObservable) }))
+  const sharedMessageObservable = topicObservable.pipe(share(), catchError(e => { 
+    Logger.error(e.stack)
+    return Rx.onErrorResumeNext(sharedMessageObservable) 
+  }))
 
   sharedMessageObservable.subscribe(async props => {
     Observables.elasticsearchClientObservable(props).subscribe({
@@ -75,12 +78,15 @@ const setup = async () => {
 
   const tracingObservable = sharedMessageObservable.pipe(
     filter(props => props.message.value.metadata.event.type === 'trace'),
-    flatMap(Observables.TraceObservable.extractContextObservable),
-    flatMap(Observables.TraceObservable.cacheSpanContextObservable),
-    flatMap(Observables.TraceObservable.findLastSpanObservable),
-    flatMap(Observables.TraceObservable.recreateTraceObservable),
-    flatMap(Observables.TraceObservable.sendTraceToApmObservable),
-    catchError(e => { return Rx.onErrorResumeNext(tracingObservable) }))
+    mergeMap(Observables.TraceObservable.extractContextObservable),
+    mergeMap(Observables.TraceObservable.cacheSpanContextObservable),
+    mergeMap(Observables.TraceObservable.findLastSpanObservable),
+    mergeMap(Observables.TraceObservable.recreateTraceObservable),
+    mergeMap(Observables.TraceObservable.sendTraceToApmObservable),
+    catchError(e => {
+      Logger.error(e.stack)
+      return Rx.onErrorResumeNext(tracingObservable) 
+    }))
 
   tracingObservable.subscribe({
     next: traceId => {
