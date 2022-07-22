@@ -1,5 +1,10 @@
 # event-stream-processor
 
+[![Git Commit](https://img.shields.io/github/last-commit/mojaloop/event-stream-processor.svg?style=flat)](https://github.com/mojaloop/event-stream-processor/commits/master)
+[![Git Releases](https://img.shields.io/github/release/mojaloop/event-stream-processor.svg?style=flat)](https://github.com/mojaloop/event-stream-processor/releases)
+[![Docker pulls](https://img.shields.io/docker/pulls/mojaloop/event-stream-processor.svg?style=flat)](https://hub.docker.com/r/mojaloop/event-stream-processor)
+[![CircleCI](https://circleci.com/gh/mojaloop/event-stream-processor.svg?style=svg)](https://app.circleci.com/pipelines/github/mojaloop/event-stream-processor)
+
 **EXPERIMENTAL** Event Stream Processor (ESP) for Event Stream (logs, audits, errors, trace, etc)
 
 ## Todo
