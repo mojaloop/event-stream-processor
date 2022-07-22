@@ -9,12 +9,13 @@
 
 ## TODO
 
-- Improve unit tests.
+- Improve unit tests using Jest (NOT tap/tape!).
 - Improve code-coverage to 90% across the board: [.nycrc.yml](./.nycrc.yml).
 - Add NPM script `test` as a `pre-commit` in the package.json.
 - Update CI-CD to include unit and code-coverage checks.
 - Technical Debt to be resolved:
   - Address legacy API changes that will be deprecated with RXJS v8.
+  - Investigate the reason/cause for `observable.complete()` throwing the following unhandled error: "TypeError: teardown.unsubscribe is not a function" to be thrown.
   - Re-factor solution to not rely on forked implementations of `@mojaloop/elastic-apm-node*` dependencies. Consider something using [elastic-apm-http-client](https://www.npmjs.com/package/elastic-apm-http-client), or completely replace with [opentelemetry](https://opentelemetry.io/docs/instrumentation/js/getting-started/).
   - Re-factor solution to use [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) instead of deprecated [elasticsearch](https://www.npmjs.com/package/elasticsearch) dependency.
   - Removed unused `FluentD` legacy code/dependencies.
