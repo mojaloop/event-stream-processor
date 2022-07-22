@@ -7,12 +7,17 @@
 
 **EXPERIMENTAL** Event Stream Processor (ESP) for Event Stream (logs, audits, errors, trace, etc)
 
-## Todo
+## TODO
 
 - Improve unit tests.
 - Improve code-coverage to 90% across the board: [.nycrc.yml](./.nycrc.yml).
 - Add NPM script `test` as a `pre-commit` in the package.json.
 - Update CI-CD to include unit and code-coverage checks.
+- Technical Debt to be resolved:
+  - Address legacy API changes that will be deprecated with RXJS v8.
+  - Re-factor solution to not rely on forked implementations of `@mojaloop/elastic-apm-node*` dependencies. Consider something using [elastic-apm-http-client](https://www.npmjs.com/package/elastic-apm-http-client), or completely replace with [opentelemetry](https://opentelemetry.io/docs/instrumentation/js/getting-started/).
+  - Re-factor solution to use [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) instead of deprecated [elasticsearch](https://www.npmjs.com/package/elasticsearch) dependency.
+  - Removed unused `FluentD` legacy code/dependencies.
 
 ## 1. Pre-requisites
 
