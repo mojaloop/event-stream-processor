@@ -19,6 +19,7 @@
   - Re-factor solution to not rely on forked implementations of `@mojaloop/elastic-apm-node*` dependencies. Consider something using [elastic-apm-http-client](https://www.npmjs.com/package/elastic-apm-http-client), or completely replace with [opentelemetry](https://opentelemetry.io/docs/instrumentation/js/getting-started/).
   - Re-factor solution to use [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) instead of deprecated [elasticsearch](https://www.npmjs.com/package/elasticsearch) dependency.
   - Removed unused `FluentD` legacy code/dependencies.
+  - Fix issues with updated `@hapi/catbox*` dependency releases.
 
 ## 1. Pre-requisites
 
