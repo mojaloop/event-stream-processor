@@ -22,7 +22,6 @@ COPY --chown=ml-user --from=builder /opt/app .
 
 COPY src /opt/app/src
 COPY config /opt/app/config
-COPY app.js /opt/app/
 
 EXPOSE 3082
 CMD ["npm", "run", "start"]
