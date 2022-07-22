@@ -85,7 +85,7 @@ const setup = async () => {
     mergeMap(Observables.TraceObservable.sendTraceToApmObservable),
     catchError(e => {
       Logger.error(e.stack)
-      return Rx.onErrorResumeNext(tracingObservable) 
+      return Rx.onErrorResumeNext(tracingObservable)
     }))
 
   tracingObservable.subscribe({

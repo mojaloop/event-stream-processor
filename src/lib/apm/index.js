@@ -31,6 +31,7 @@
 
 'use strict'
 
+const Logger = require('@mojaloop/central-services-logger')
 const Client = require('elastic-apm-http-client')
 const Config = require('../config')
 

@@ -9,7 +9,7 @@ const deserializeError = require('deserialize-error')
 const { Tracer, EventStatusType } = require('@mojaloop/event-sdk')
 const { merge } = require('lodash')
 // const { tracer } = require('../lib/tracer')
-const APMClient = require('../lib/apm')
+const { APMClient } = require('../lib/apm')
 
 const clientOptions = Config.CACHE.CATBOX_MEMORY
 let client
@@ -126,6 +126,7 @@ const findLastSpanObservable = ({ traceId, tags, latestSpanId }) => {
 
       const isLastSpan = () => {
         const { transactionAction, transactionType } = tags
+        Logger.warn(`{ traceId: ${traceId}, transactionAction: ${transactionAction}, transactionType: ${transactionType} }`)
         const isError = (!!(code) && status === EventStatusType.failed) || !!errorTags
         if (Config.SPAN.END_CRITERIA[transactionType]) {
           for (const criteria of Config.SPAN.END_CRITERIA[transactionType]) {
@@ -209,7 +210,7 @@ const sendSpanToApm = async currentSpan => {
   //   parentSpanIdBuffer
   //     ? new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer, parentSpanIdBuffer]))
   //     : new TraceParent(Buffer.concat([versionBuffer, traceIdBuffer, spanIdBuffer, flagsBuffer]))
-  
+
   try {
     const client = await APMClient.getInstance()
     client.sendSpan({
@@ -219,11 +220,9 @@ const sendSpanToApm = async currentSpan => {
       type: 'db.mysql.query'
     })
     client.flush()
-    
   } catch (err) {
     Logger.error(err)
   }
-  
   // const span = tracer.startSpan(`${service}`, { startTime: Date.parse(startTimestamp), tags }, context)
   // if (status === EventStatusType.failed) {
   //   span.setTag('error', true)
