@@ -112,7 +112,7 @@ curl -X PUT "http://localhost:9200/_template/moja_template?pretty" -H 'Content-T
     sh ./docker/kafka-produces-single.sh
     ```
 
-3. Helper script to produce a multiple sample messages using [kcat](https://github.com/edenhill/kcat)
+3. Helper script to produce multiple sample messages using [kcat](https://github.com/edenhill/kcat)
 
     ```bash
     sh ./docker/kafka-produces-multi.sh
