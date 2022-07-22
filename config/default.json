@@ -64,7 +64,7 @@
     "namespace": "logstash"
   },
   "EFK_CLIENT": {
-    "host": "dev1-elasticsearch.mojaloop.live",
+    "host": "localhost:9200",
     "log": "error",
     "index": {
       "name": "mojaloop",
@@ -73,7 +73,7 @@
   },
   "APM": {
     "serviceName": "event-stream-processor",
-    "serverUrl": "http://dev1-apm.mojaloop.live:80",
+    "serverUrl": "http://localhost:8200",
     "captureErrorLogStackTraces": "never"
   },
   "PORT": 3082,
