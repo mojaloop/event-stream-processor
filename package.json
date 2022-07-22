@@ -74,6 +74,7 @@
     "pre-commit": "1.2.2",
     "replace": "^1.2.1",
     "standard": "17.0.0",
+    "standard-version": "^9.5.0",
     "tap-spec": "^5.0.0",
     "tape": "5.5.3"
   },
