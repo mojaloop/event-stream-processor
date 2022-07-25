@@ -68,7 +68,7 @@
     "audit-ci": "^6.3.0",
     "eslint": "8.20.0",
     "faucet": "0.0.1",
-    "npm-check-updates": "15.3.4",
+    "npm-check-updates": "16.0.0",
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
     "replace": "^1.2.1",
