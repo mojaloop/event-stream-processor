@@ -66,7 +66,8 @@ const elasticsearchClientObservable = ({ message }) => {
         index: ElasticSearchClient.getIndex(),
         body: addElasticsearchMetaData(message.value)
       })
-      observable.complete()
+      // TODO: Investigate the reason/cause for this error being thrown when the next line is uncommented: "TypeError: teardown.unsubscribe is not a function" to be thrown.
+      // observable.complete()
     } catch (e) {
       observable.error(e)
       Logger.error(e.stack)

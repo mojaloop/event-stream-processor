@@ -66,9 +66,10 @@ typings/
 # VSCode directory
 .vscode
 
-# devspace configuration
-.devspace
+# https://devspace.sh/
 devspace*
+.devspace/**.*
 
-# IGNORE
+# Add ignores
 *IGNORE*
+*ignore*

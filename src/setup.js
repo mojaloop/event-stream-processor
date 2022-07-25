@@ -44,6 +44,10 @@ const Observables = require('./observables')
 const { initializeCache } = Observables.TraceObservable
 
 const setup = async () => {
+  Rx.config.onUnhandledError = (err) => {
+    console.warn(err)
+  }
+  Rx.config.useDeprecatedNextContext = true
   await registerEventHandler()
   await initializeCache(Config.CACHE_CONFIG)
   const topicName = Kafka.transformGeneralTopicName(Config.KAFKA_CONFIG.TOPIC_TEMPLATES.GENERAL_TOPIC_TEMPLATE.TEMPLATE, Enum.Events.Event.Action.EVENT)

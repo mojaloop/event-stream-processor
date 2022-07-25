@@ -1,28 +1,7 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "11.0.1-snapshot",
+  "version": "12.0.0-snapshot.6",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
-  "main": "app.js",
-  "scripts": {
-    "start": "WITH_SASL=0&&LD_LIBRARY_PATH=$PWD/node_modules/node-rdkafka/build/deps&& node app.js",
-    "test": "npm run test:unit | faucet",
-    "standard": "standard",
-    "standard:fix": "standard --fix",
-    "lint": "npm run standard",
-    "lint:fix": "npm run standard:fix",
-    "test:unit": "tape 'test/unit/**/*.test.js'",
-    "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
-    "test:coverage": "nyc tapes -- 'test/unit/**/*.test.js' | tap-spec; nyc report ---reporter=text",
-    "test:coverage-check": "npm run test:coverage && nyc check-coverage",
-    "audit:resolve": "SHELL=sh resolve-audit --production",
-    "audit:check": "SHELL=sh check-audit --production",
-    "dep:check": "npx ncu -e 2",
-    "dep:update": "npx ncu -u"
-  },
-  "pre-commit": [
-    "dep:check",
-    "lint"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mojaloop/event-stream-processor"
@@ -37,38 +16,70 @@
     "url": "https://github.com/mojaloop/event-stream-processor/issues"
   },
   "homepage": "https://github.com/mojaloop/event-stream-processor#readme",
+  "engines": {
+    "node": "=16.x"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "npm run test:unit | faucet",
+    "standard": "standard",
+    "standard:fix": "standard --fix",
+    "lint": "npm run standard",
+    "lint:fix": "npm run standard:fix",
+    "test:unit": "tape 'test/unit/**/*.test.js'",
+    "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
+    "test:coverage": "nyc tapes -- 'test/unit/**/*.test.js' | tap-spec; nyc report ---reporter=text",
+    "test:coverage-check": "npm run test:coverage && nyc check-coverage",
+    "audit:check": "npx audit-ci --config ./audit-ci.jsonc",
+    "dep:check": "npx ncu -e 2",
+    "dep:update": "npx ncu -u",
+    "release": "npx standard-version --no-verify --prerelease snapshot --releaseCommitMessageFormat 'chore(snapshot): {{currentTag}} [skip ci]'",
+    "releaseReplaceTheAboveWhenNotEXPERIMENTAL": "npx standard-version --no-verify --releaseCommitMessageFormat 'chore(release): {{currentTag}} [skip ci]'",
+    "snapshot": "npx standard-version --no-verify --skip.changelog --prerelease snapshot --releaseCommitMessageFormat 'chore(snapshot): {{currentTag}}'"
+  },
+  "pre-commit": [
+    "dep:check",
+    "lint"
+  ],
   "dependencies": {
     "@hapi/catbox": "11.1.1",
     "@hapi/catbox-memory": "5.0.1",
-    "@mojaloop/central-services-health": "13.0.0",
-    "@mojaloop/central-services-logger": "10.6.1",
-    "@mojaloop/central-services-metrics": "11.0.0",
-    "@mojaloop/central-services-shared": "13.0.5",
-    "@mojaloop/central-services-stream": "10.7.0",
+    "@mojaloop/central-services-health": "14.0.1",
+    "@mojaloop/central-services-logger": "11.0.1",
+    "@mojaloop/central-services-metrics": "12.0.5",
+    "@mojaloop/central-services-shared": "17.0.2",
+    "@mojaloop/central-services-stream": "11.0.0",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.1-snapshot",
-    "@mojaloop/event-sdk": "10.7.1",
+    "@mojaloop/event-sdk": "11.0.2",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.7.2",
     "fluent-logger": "3.4.1",
     "lodash": "^4.17.21",
-    "moment": "2.29.1",
+    "moment": "2.29.4",
     "mustache": "4.2.0",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
-    "rxjs": "7.3.0",
-    "rxjs-compat": "6.6.7",
+    "rxjs": "7.5.6",
     "traceparent": "1.0.0"
   },
   "devDependencies": {
-    "eslint": "7.32.0",
+    "audit-ci": "^6.3.0",
+    "eslint": "8.20.0",
     "faucet": "0.0.1",
-    "npm-audit-resolver": "2.3.1",
-    "npm-check-updates": "11.8.3",
+    "npm-check-updates": "16.0.0",
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
-    "standard": "16.0.3",
+    "replace": "^1.2.1",
+    "standard": "17.0.0",
+    "standard-version": "^9.5.0",
     "tap-spec": "^5.0.0",
-    "tape": "5.3.1"
+    "tape": "5.5.3"
+  },
+  "standard-version": {
+    "scripts": {
+      "postchangelog": "replace '\\[mojaloop/#(\\d+)\\]\\(https://github.com/mojaloop/(.*)/issues/(\\d+)\\)' '[mojaloop/#$1](https://github.com/mojaloop/project/issues/$1)' CHANGELOG.md"
+    }
   }
 }

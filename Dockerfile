@@ -1,25 +1,27 @@
-FROM node:12.16.0-alpine
-USER root
-
-WORKDIR /opt/event-stream-processor
+FROM node:16.15.0-alpine as builder
+WORKDIR /opt/app
 
 RUN apk --no-cache add git
-RUN apk add --no-cache -t build-dependencies make gcc g++ python libtool autoconf automake \
+RUN apk add --no-cache -t build-dependencies make gcc g++ python3 libtool libressl-dev openssl-dev autoconf automake \
     && cd $(npm root -g)/npm \
     && npm config set unsafe-perm true \
     && npm install -g node-gyp
 
-COPY package.json package-lock.json* /opt/event-stream-processor/
+COPY package*.json /opt/app/
 
-RUN npm install --production && \
-  npm uninstall -g npm
+RUN npm ci --production
 
-COPY src /opt/event-stream-processor/src
-COPY config /opt/event-stream-processor/config
-COPY app.js /opt/event-stream-processor/
-# COPY docs /opt/central-event-processor/docs
+FROM node:16.15.0-alpine
+WORKDIR /opt/app
 
-RUN apk del build-dependencies
+# Create a non-root user: ml-user
+RUN adduser -D ml-user 
+USER ml-user
+
+COPY --chown=ml-user --from=builder /opt/app .
+
+COPY src /opt/app/src
+COPY config /opt/app/config
 
 EXPOSE 3082
-CMD node app.js
+CMD ["npm", "run", "start"]
