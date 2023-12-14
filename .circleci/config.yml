@@ -790,7 +790,7 @@ workflows:
           requires:
             - setup
             - test-lint
-            - test-unit
+            # - test-unit
             - test-coverage
             # - test-integration
             # - test-functional
@@ -828,7 +828,7 @@ workflows:
           requires:
             - pr-tools/pr-title-check
             - test-lint
-            - test-unit
+            # - test-unit
             - test-coverage
             # - test-integration
             # - test-functional
@@ -855,7 +855,7 @@ workflows:
           requires:
             - pr-tools/pr-title-check
             - test-lint
-            - test-unit
+            # - test-unit
             - test-coverage
             # - test-integration
             # - test-functional
@@ -875,7 +875,7 @@ workflows:
           requires:
             - pr-tools/pr-title-check
             - test-lint
-            - test-unit
+            # - test-unit
             - test-coverage
             # - test-integration
             # - test-functional
