@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "12.0.0-snapshot.7",
+  "version": "12.0.0-snapshot.8",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/mojaloop/event-stream-processor#readme",
   "engines": {
-    "node": "=16.x"
+    "node": "=18.x"
   },
   "main": "src/index.js",
   "scripts": {
@@ -45,14 +45,14 @@
   "dependencies": {
     "@hapi/catbox": "11.1.1",
     "@hapi/catbox-memory": "5.0.1",
-    "@mojaloop/central-services-health": "14.0.1",
-    "@mojaloop/central-services-logger": "11.0.1",
-    "@mojaloop/central-services-metrics": "12.0.5",
-    "@mojaloop/central-services-shared": "17.0.2",
-    "@mojaloop/central-services-stream": "11.0.0",
+    "@mojaloop/central-services-health": "14.0.2",
+    "@mojaloop/central-services-logger": "11.2.2",
+    "@mojaloop/central-services-metrics": "12.0.8",
+    "@mojaloop/central-services-shared": "18.2.0",
+    "@mojaloop/central-services-stream": "11.2.0",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
-    "@mojaloop/elastic-apm-node-opentracing": "6.4.1-snapshot",
-    "@mojaloop/event-sdk": "11.0.2",
+    "@mojaloop/elastic-apm-node-opentracing": "6.4.0-snapshot",
+    "@mojaloop/event-sdk": "14.0.0",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.7.2",
     "fluent-logger": "3.4.1",
@@ -61,21 +61,21 @@
     "mustache": "4.2.0",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
-    "rxjs": "7.5.6",
+    "rxjs": "7.8.1",
     "traceparent": "1.0.0"
   },
   "devDependencies": {
-    "audit-ci": "^6.3.0",
-    "eslint": "8.20.0",
-    "faucet": "0.0.1",
-    "npm-check-updates": "16.0.0",
+    "audit-ci": "^6.6.1",
+    "eslint": "8.56.0",
+    "faucet": "0.0.4",
+    "npm-check-updates": "16.14.12",
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
-    "replace": "^1.2.1",
-    "standard": "17.0.0",
+    "replace": "^1.2.2",
+    "standard": "17.1.0",
     "standard-version": "^9.5.0",
     "tap-spec": "^5.0.0",
-    "tape": "5.5.3"
+    "tape": "5.7.2"
   },
   "standard-version": {
     "scripts": {
