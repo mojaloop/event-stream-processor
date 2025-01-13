@@ -45,19 +45,19 @@
   "dependencies": {
     "@hapi/catbox": "11.1.1",
     "@hapi/catbox-memory": "5.0.1",
-    "@mojaloop/central-services-health": "14.0.2",
-    "@mojaloop/central-services-logger": "11.2.2",
-    "@mojaloop/central-services-metrics": "12.0.8",
-    "@mojaloop/central-services-shared": "18.2.0",
-    "@mojaloop/central-services-stream": "11.2.0",
+    "@mojaloop/central-services-health": "15.0.0",
+    "@mojaloop/central-services-logger": "11.5.2",
+    "@mojaloop/central-services-metrics": "12.4.3",
+    "@mojaloop/central-services-shared": "18.15.1",
+    "@mojaloop/central-services-stream": "11.4.2",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.0-snapshot",
-    "@mojaloop/event-sdk": "14.0.0",
+    "@mojaloop/event-sdk": "14.1.2",
     "deserialize-error": "0.0.3",
-    "elasticsearch": "16.7.2",
+    "elasticsearch": "16.7.3",
     "fluent-logger": "3.4.1",
     "lodash": "^4.17.21",
-    "moment": "2.29.4",
+    "moment": "2.30.1",
     "mustache": "4.2.0",
     "parse-strings-in-object": "2.0.0",
     "rc": "1.2.8",
@@ -65,17 +65,32 @@
     "traceparent": "1.0.0"
   },
   "devDependencies": {
-    "audit-ci": "^6.6.1",
-    "eslint": "8.56.0",
+    "audit-ci": "^7.1.0",
+    "eslint": "8.57.1",
     "faucet": "0.0.4",
-    "npm-check-updates": "16.14.12",
-    "nyc": "^15.1.0",
+    "npm-check-updates": "17.1.13",
+    "nyc": "^17.1.0",
     "pre-commit": "1.2.2",
     "replace": "^1.2.2",
-    "standard": "17.1.0",
+    "standard": "17.1.2",
     "standard-version": "^9.5.0",
     "tap-spec": "^5.0.0",
-    "tape": "5.7.2"
+    "tape": "5.9.0"
+  },
+  "overrides": {
+    "widdershins": {
+      "ajv": "6.12.3",
+      "jsonpointer": "5.0.0",
+      "markdown-it": "12.3.2",
+      "postcss": "8.4.31",
+      "swagger2openapi": "7.0.8"
+    },
+    "ejs": "3.1.10",
+    "sanitize-html": "2.12.1",
+    "markdown-it": "12.3.2",
+    "trim": "0.0.3",
+    "cross-spawn": "7.0.6",
+    "yargs-parser": "21.1.1"
   },
   "standard-version": {
     "scripts": {
