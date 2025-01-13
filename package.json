@@ -52,7 +52,7 @@
     "@mojaloop/central-services-stream": "11.4.2",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.0-snapshot",
-    "@mojaloop/event-sdk": "14.1.1",
+    "@mojaloop/event-sdk": "14.1.2",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.7.3",
     "fluent-logger": "3.4.1",
