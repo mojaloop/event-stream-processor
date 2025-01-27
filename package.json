@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "12.0.0-snapshot.11",
+  "version": "12.0.0-snapshot.12",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "repository": {
     "type": "git",
@@ -78,7 +78,7 @@
     "tape": "5.9.0"
   },
   "overrides": {
-   "widdershins": {
+    "widdershins": {
       "ajv": "6.12.3",
       "jsonpointer": "5.0.0",
       "markdown-it": "12.3.2",
