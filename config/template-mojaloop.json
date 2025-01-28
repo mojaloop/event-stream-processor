@@ -217,6 +217,9 @@
           }
         }
       }
+    },
+    "aliases": {
+      "mojaloop-alias": {}
     }
   }
 }
