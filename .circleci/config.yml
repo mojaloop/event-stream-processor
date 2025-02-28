@@ -399,7 +399,7 @@ jobs:
           name: Load the pre-built docker image from workspace
           command: docker load -i /tmp/docker-image.tar
       - trivy/scan:
-          image-name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
+          image_name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
           # You can uncomment to fail on severity levels if desired
           # security-checks: vuln
           # severity: 'CRITICAL,HIGH'
