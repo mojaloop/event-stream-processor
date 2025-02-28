@@ -373,7 +373,7 @@ jobs:
           command: docker load -i /tmp/docker-image.tar
       - grype/scan-image:
           image-name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
-          output-format: table,json
+          output-format: table, json
           # You can uncomment to fail on severity levels if desired
           # fail-on-severity: critical
       - run:
