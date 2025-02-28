@@ -10,7 +10,8 @@ orbs:
   slack: circleci/slack@4.12.5 # Ref: https://github.com/mojaloop/ci-config/tree/master/slack-templates
   pr-tools: mojaloop/pr-tools@0.1.10 # Ref: https://github.com/mojaloop/ci-config/
   gh: circleci/github-cli@2.2.0
-  anchore: anchore/anchore-engine@1.9.0
+  grype: anchore/grype@0.2.0
+  trivy: cci-labs/trivy@1.0.0
 
 ##
 # defaults
@@ -360,81 +361,66 @@ jobs:
           path: /tmp/license-scanner/results
           destination: licenses
 
-  image-scan:
-    executor: anchore/anchore_engine
-    shell: /bin/sh -leo pipefail ## Ref: https://circleci.com/docs/env-vars/#alpine-linux
+  grype-scan:
+    executor: default-machine
     environment:
       <<: *defaults_environment
-      BASH_ENV: /etc/profile ## Ref: https://circleci.com/docs/env-vars/#alpine-linux
-      ENV: ~/.profile
-      NVM_ARCH_UNOFFICIAL_OVERRIDE: x64-musl ## Ref: https://github.com/nvm-sh/nvm/issues/1102#issuecomment-550572252
-    working_directory: *WORKING_DIR
     steps:
-      - setup_remote_docker
       - attach_workspace:
           at: /tmp
       - run:
-          name: Install docker dependencies for anchore
+          name: Load the pre-built docker image from workspace
+          command: docker load -i /tmp/docker-image.tar
+      - grype/scan-image:
+          image-name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
+          output-format: table,json
+          # You can uncomment to fail on severity levels if desired
+          # fail-on-severity: critical
+      - run:
+          name: Check critical vulnerabilities count
           command: |
-            apk add --update py-pip docker python3-dev libffi-dev openssl-dev gcc libc-dev make jq npm curl bash
-      - run:
-          name: Install AWS CLI dependencies
-          command: *defaults_awsCliDependencies
-      - checkout
-      - run:
-          name: Setup Slack config
-          command: |
-            echo "export SLACK_PROJECT_NAME=${CIRCLE_PROJECT_REPONAME}" >> $BASH_ENV
-            echo "export SLACK_RELEASE_TYPE='GitHub Release'" >> $BASH_ENV
-            echo "export SLACK_RELEASE_TAG='${RELEASE_TAG} on ${CIRCLE_BRANCH} branch'" >> $BASH_ENV
-            echo "export SLACK_BUILD_ID=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
-            echo "export SLACK_CI_URL=${CIRCLE_BUILD_URL}" >> $BASH_ENV
-            echo "export SLACK_CUSTOM_MSG='Anchore Image Scan failed for: \`${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}\`'" >> $BASH_ENV
-      - run:
-          <<: *defaults_configure_nvm
-      - run:
-          <<: *defaults_display_versions
-      - run:
-          name: Install general dependencies
-          command: *defaults_docker_Dependencies
+            CRITICAL_COUNT=$(cat grype-vulnerabilities.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
+            echo "Critical vulnerabilities found: $CRITICAL_COUNT"
+      - store_artifacts:
+          path: grype-vulnerabilities.json
+          destination: grype-scan/scan-results.json
+      - store_artifacts:
+          path: grype-vulnerabilities.txt
+          destination: grype-scan/scan-results.txt
+
+  trivy-scan:
+    executor: default-machine
+    environment:
+      <<: *defaults_environment
+    steps:
+      - attach_workspace:
+          at: /tmp
       - run:
           name: Load the pre-built docker image from workspace
           command: docker load -i /tmp/docker-image.tar
+      - trivy/scan:
+          image-name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
+          # You can uncomment to fail on severity levels if desired
+          # security-checks: vuln
+          # severity: 'CRITICAL,HIGH'
+          # exit-code: '1'
+          format: 'table'
+          output: 'trivy-results.txt'
+      - trivy/scan:
+          image-name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
+          format: 'json'
+          output: 'trivy-results.json'
       - run:
-          name: Download the mojaloop/ci-config repo
+          name: Check critical vulnerabilities count
           command: |
-            git clone https://github.com/mojaloop/ci-config /tmp/ci-config
-            # Generate the mojaloop anchore-policy
-            cd /tmp/ci-config/container-scanning && ./mojaloop-policy-generator.js /tmp/mojaloop-policy.json
-      - run:
-          name: Pull base image locally
-          command: |
-            echo "Pulling docker image: node:$NVMRC_VERSION-alpine"
-            docker pull node:$NVMRC_VERSION-alpine
-      ## Analyze the base and derived image
-      ## Note: It seems images are scanned in parallel, so preloading the base image result doesn't give us any real performance gain
-      - anchore/analyze_local_image:
-          # Force the older version, version 0.7.0 was just published, and is broken
-          anchore_version: v0.6.1
-          image_name: "docker.io/node:${NVMRC_VERSION}-alpine ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local"
-          policy_failure: false
-          timeout: '500'
-          # Note: if the generated policy is invalid, this will fallback to the default policy, which we don't want!
-          policy_bundle_file_path: /tmp/mojaloop-policy.json
-      - run:
-          name: Upload Anchore reports to s3
-          command: |
-            aws s3 cp anchore-reports ${AWS_S3_DIR_ANCHORE_REPORTS}/${CIRCLE_PROJECT_REPONAME}/ --recursive
-            aws s3 rm ${AWS_S3_DIR_ANCHORE_REPORTS}/latest/ --recursive --exclude "*" --include "${CIRCLE_PROJECT_REPONAME}*"
-            aws s3 cp anchore-reports ${AWS_S3_DIR_ANCHORE_REPORTS}/latest/ --recursive
-      - run:
-          name: Evaluate failures
-          command: /tmp/ci-config/container-scanning/anchore-result-diff.js anchore-reports/node_${NVMRC_VERSION}-alpine-policy.json anchore-reports/${CIRCLE_PROJECT_REPONAME}*-policy.json
+            CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[] | .Vulnerabilities // [] | .[] | select(.Severity == "CRITICAL")] | length')
+            echo "Critical vulnerabilities found: $CRITICAL_COUNT"
       - store_artifacts:
-          path: anchore-reports
-      - slack/notify:
-          event: fail
-          template: SLACK_TEMP_RELEASE_FAILURE
+          path: trivy-results.json
+          destination: trivy-scan/scan-results.json
+      - store_artifacts:
+          path: trivy-results.txt
+          destination: trivy-scan/scan-results.txt
 
   release:
     executor: default-docker
@@ -541,7 +527,7 @@ jobs:
           at: /tmp
       - run:
           name: Load the pre-built docker image from workspace
-          command: | 
+          command: |
             docker load -i /tmp/docker-image.tar
       - run:
           name: Login to Docker Hub
@@ -726,7 +712,17 @@ workflows:
             branches:
               ignore:
                 - /.*/
-      - image-scan:
+      - grype-scan:
+          context: org-global
+          requires:
+            - build-local
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot(\.[0-9]+)?)?(\-hotfix(\.[0-9]+)?)?(\-perf(\.[0-9]+)?)?/
+            branches:
+              ignore:
+                - /.*/
+      - trivy-scan:
           context: org-global
           requires:
             - build-local
@@ -749,7 +745,8 @@ workflows:
             - vulnerability-check
             - audit-licenses
             - license-scan
-            - image-scan
+            - grype-scan
+            - trivy-scan
           filters:
             branches:
               only:
@@ -777,7 +774,8 @@ workflows:
             - audit-licenses
             # - test-integration
             - license-scan
-            - image-scan
+            - grype-scan
+            - trivy-scan
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*/
@@ -797,7 +795,8 @@ workflows:
             - audit-licenses
             # - test-integration
             - license-scan
-            - image-scan
+            - grype-scan
+            - trivy-scan
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*\-snapshot+((\.[0-9]+)?)/
