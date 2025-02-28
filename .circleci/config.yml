@@ -361,6 +361,33 @@ jobs:
           path: /tmp/license-scanner/results
           destination: licenses
 
+#  grype-scan:
+#    executor: default-machine
+#    environment:
+#      <<: *defaults_environment
+#    steps:
+#      - attach_workspace:
+#          at: /tmp
+#      - run:
+#          name: Load the pre-built docker image from workspace
+#          command: docker load -i /tmp/docker-image.tar
+#      - grype/scan-image:
+#          image-name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
+#          output-format: table
+#          # You can uncomment to fail on severity levels if desired
+#          # fail-on-severity: critical
+#      - run:
+#          name: Check critical vulnerabilities count
+#          command: |
+#            CRITICAL_COUNT=$(cat grype-vulnerabilities.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
+#            echo "Critical vulnerabilities found: $CRITICAL_COUNT"
+#      - store_artifacts:
+#          path: grype-vulnerabilities.json
+#          destination: grype-scan/scan-results.json
+#      - store_artifacts:
+#          path: grype-vulnerabilities.txt
+#          destination: grype-scan/scan-results.txt
+
   grype-scan:
     executor: default-machine
     environment:
@@ -371,21 +398,27 @@ jobs:
       - run:
           name: Load the pre-built docker image from workspace
           command: docker load -i /tmp/docker-image.tar
-      - grype/scan-image:
-          image-name: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
-          output-format: table
-          # You can uncomment to fail on severity levels if desired
-          # fail-on-severity: critical
+      - run:
+          name: Install Grype
+          command: |
+            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+      - run:
+          name: Run Grype scan
+          command: |
+            IMAGE_NAME="${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local"
+            echo "Scanning image: $IMAGE_NAME"
+            grype $IMAGE_NAME -o table > grype-results.txt
+            grype $IMAGE_NAME -o json > grype-results.json
       - run:
           name: Check critical vulnerabilities count
           command: |
-            CRITICAL_COUNT=$(cat grype-vulnerabilities.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
+            CRITICAL_COUNT=$(cat grype-results.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
             echo "Critical vulnerabilities found: $CRITICAL_COUNT"
       - store_artifacts:
-          path: grype-vulnerabilities.json
+          path: grype-results.json
           destination: grype-scan/scan-results.json
       - store_artifacts:
-          path: grype-vulnerabilities.txt
+          path: grype-results.txt
           destination: grype-scan/scan-results.txt
 
   trivy-scan:
