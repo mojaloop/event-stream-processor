@@ -401,7 +401,7 @@ jobs:
       - run:
           name: Install Grype
           command: |
-            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sudo sh -s -- -b /usr/local/bin
       - run:
           name: Run Grype scan
           command: |
@@ -409,6 +409,8 @@ jobs:
             echo "Scanning image: $IMAGE_NAME"
             grype $IMAGE_NAME -o table > grype-results.txt
             grype $IMAGE_NAME -o json > grype-results.json
+            cat grype-results.txt
+            cat grype-results.json
       - run:
           name: Check critical vulnerabilities count
           command: |
