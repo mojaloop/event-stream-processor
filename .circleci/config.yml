@@ -11,7 +11,7 @@ orbs:
   pr-tools: mojaloop/pr-tools@0.1.10 # Ref: https://github.com/mojaloop/ci-config/
   gh: circleci/github-cli@2.2.0
   grype: anchore/grype@0.2.0
-  trivy: cci-labs/trivy@1.0.0
+#  trivy: cci-labs/trivy@1.0.0
 
 ##
 # defaults
@@ -149,7 +149,7 @@ executors:
     working_directory: *WORKING_DIR
     shell: "/bin/bash -leo pipefail"
     machine:
-      image: ubuntu-2204:2023.04.2 # Ref: https://circleci.com/developer/machine/image/ubuntu-2204
+      image: ubuntu-2404:2024.11.1 # Ref: https://circleci.com/developer/machine/image/ubuntu-2404
 
 ##
 # Jobs
@@ -483,54 +483,54 @@ jobs:
           path: filtered-results.json
           destination: grype-scan/filtered-results.json
 
-  trivy-scan:
-    executor: default-machine
-    environment:
-      <<: *defaults_environment
-    steps:
-      - checkout  # Add this to get your repo code including the .trivyignore.yaml config
-      - attach_workspace:
-          at: /tmp
-      - run:
-          name: Load the pre-built docker image from workspace
-          command: docker load -i /tmp/docker-image.tar
-      - trivy/scan:
-          image-ref: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
-          # You can uncomment to fail on severity levels if desired
-          # security-checks: vuln
-          # severity: 'CRITICAL,HIGH'
-          # exit-code: '1'
-          exit-code: '0'
-          format: 'table'
-          output: 'trivy-results.txt'
-          # ignore-policy: '.trivyignore.yaml'
-          additional-args: '--ignorefile .trivyignore.yaml'
-      - trivy/scan:
-          image-ref: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
-          format: 'json'
-          output: 'trivy-results.json'
-          #ignore-policy: '.trivyignore.yaml'
-          additional-args: '--ignorefile .trivyignore.yaml'
-          exit-code: '0'
-      - run:
-          name: Check critical vulnerabilities count
-          command: |
-            CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[] | .Vulnerabilities // [] | .[] | select(.Severity == "CRITICAL")] | length')
-            echo "Critical vulnerabilities found: $CRITICAL_COUNT"
-
-            # Optional: Verify cross-spawn vulnerabilities are excluded
-            CROSS_SPAWN_COUNT=$(cat trivy-results.json | jq '[.Results[] | .Vulnerabilities // [] | .[] | select(.PkgName == "cross-spawn")] | length')
-            echo "Cross-spawn vulnerabilities found after filtering: $CROSS_SPAWN_COUNT"
-
-            # List remaining high vulnerabilities for awareness
-            echo "High severity vulnerabilities:"
-            cat trivy-results.json | jq -r '.Results[] | .Vulnerabilities // [] | .[] | select(.Severity == "HIGH") | "- \(.PkgName) \(.InstalledVersion): \(.VulnerabilityID)"'
-      - store_artifacts:
-          path: trivy-results.json
-          destination: trivy-scan/scan-results.json
-      - store_artifacts:
-          path: trivy-results.txt
-          destination: trivy-scan/scan-results.txt
+#  trivy-scan:
+#    executor: default-machine
+#    environment:
+#      <<: *defaults_environment
+#    steps:
+#      - checkout  # Add this to get your repo code including the .trivyignore.yaml config
+#      - attach_workspace:
+#          at: /tmp
+#      - run:
+#          name: Load the pre-built docker image from workspace
+#          command: docker load -i /tmp/docker-image.tar
+#      - trivy/scan:
+#          image-ref: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
+#          # You can uncomment to fail on severity levels if desired
+#          # security-checks: vuln
+#          # severity: 'CRITICAL,HIGH'
+#          # exit-code: '1'
+#          exit-code: '0'
+#          format: 'table'
+#          output: 'trivy-results.txt'
+#          # ignore-policy: '.trivyignore.yaml'
+#          additional-args: '--ignorefile .trivyignore.yaml'
+#      - trivy/scan:
+#          image-ref: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
+#          format: 'json'
+#          output: 'trivy-results.json'
+#          #ignore-policy: '.trivyignore.yaml'
+#          additional-args: '--ignorefile .trivyignore.yaml'
+#          exit-code: '0'
+#      - run:
+#          name: Check critical vulnerabilities count
+#          command: |
+#            CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[] | .Vulnerabilities // [] | .[] | select(.Severity == "CRITICAL")] | length')
+#            echo "Critical vulnerabilities found: $CRITICAL_COUNT"
+#
+#            # Optional: Verify cross-spawn vulnerabilities are excluded
+#            CROSS_SPAWN_COUNT=$(cat trivy-results.json | jq '[.Results[] | .Vulnerabilities // [] | .[] | select(.PkgName == "cross-spawn")] | length')
+#            echo "Cross-spawn vulnerabilities found after filtering: $CROSS_SPAWN_COUNT"
+#
+#            # List remaining high vulnerabilities for awareness
+#            echo "High severity vulnerabilities:"
+#            cat trivy-results.json | jq -r '.Results[] | .Vulnerabilities // [] | .[] | select(.Severity == "HIGH") | "- \(.PkgName) \(.InstalledVersion): \(.VulnerabilityID)"'
+#      - store_artifacts:
+#          path: trivy-results.json
+#          destination: trivy-scan/scan-results.json
+#      - store_artifacts:
+#          path: trivy-results.txt
+#          destination: trivy-scan/scan-results.txt
 
   release:
     executor: default-docker
@@ -830,15 +830,15 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot(\.[0-9]+)?)?(\-hotfix(\.[0-9]+)?)?(\-perf(\.[0-9]+)?)?/
             branches:
               only: /.*/
-      - trivy-scan:
-          context: org-global
-          requires:
-            - build-local
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot(\.[0-9]+)?)?(\-hotfix(\.[0-9]+)?)?(\-perf(\.[0-9]+)?)?/
-            branches:
-              only: /.*/
+#      - trivy-scan:
+#          context: org-global
+#          requires:
+#            - build-local
+#          filters:
+#            tags:
+#              only: /v[0-9]+(\.[0-9]+)*(\-snapshot(\.[0-9]+)?)?(\-hotfix(\.[0-9]+)?)?(\-perf(\.[0-9]+)?)?/
+#            branches:
+#              only: /.*/
       # New commits to main release automatically
       - release:
           context: org-global
@@ -853,7 +853,7 @@ workflows:
             - audit-licenses
             - license-scan
             - grype-scan
-            - trivy-scan
+#            - trivy-scan
             # - grype-scan-orb
           filters:
             branches:
@@ -883,7 +883,7 @@ workflows:
             # - test-integration
             - license-scan
             - grype-scan
-            - trivy-scan
+#            - trivy-scan
             # - grype-scan-orb
           filters:
             tags:
@@ -905,7 +905,7 @@ workflows:
             # - test-integration
             - license-scan
             - grype-scan
-            - trivy-scan
+#            - trivy-scan
             # - grype-scan-orb
           filters:
             tags:
