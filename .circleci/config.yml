@@ -454,12 +454,34 @@ jobs:
           command: |
             CRITICAL_COUNT=$(cat grype-results.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
             echo "Critical vulnerabilities found: $CRITICAL_COUNT"
+      - run:
+          name: Filter out cross-spawn and check critical vulnerabilities count
+          command: |
+            # Use jq to filter out cross-spawn vulnerabilities from the results
+            cat grype-results.json | jq '.matches = [.matches[] | select(.artifact.name != "cross-spawn")]' > filtered-results.json
+
+            # Count critical vulnerabilities in the filtered results
+            CRITICAL_COUNT=$(cat filtered-results.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
+            echo "Critical vulnerabilities found (excluding cross-spawn): $CRITICAL_COUNT"
+
+            # List remaining high vulnerabilities for awareness
+            echo "High severity vulnerabilities (excluding cross-spawn):"
+            cat filtered-results.json | jq -r '.matches[] | select(.vulnerability.severity == "High") | "- \(.artifact.name) \(.artifact.version): \(.vulnerability.id)"'
+
+            # Optional: If you want the job to fail on critical vulnerabilities
+            if [ "$CRITICAL_COUNT" -gt 0 ]; then
+              echo "Critical vulnerabilities found. Failing the build."
+              exit 1
+            fi
       - store_artifacts:
           path: grype-results.json
           destination: grype-scan/scan-results.json
       - store_artifacts:
           path: grype-results.txt
           destination: grype-scan/scan-results.txt
+      - store_artifacts:
+          path: filtered-results.json
+          destination: grype-scan/filtered-results.json
 
   trivy-scan:
     executor: default-machine

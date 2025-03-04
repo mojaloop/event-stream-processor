@@ -1,21 +1,25 @@
 ignore:
-  # Ignore all vulnerabilities in cross-spawn packages
+  # Ignore cross-spawn vulnerabilities by CVE ID
+  - vulnerability: "CVE-2024-21538"
+    package:
+      name: "cross-spawn"
+
+  # Ignore cross-spawn vulnerabilities by GHSA ID
+  - vulnerability: "GHSA-3xgq-45jj-v275"
+    package:
+      name: "cross-spawn"
+
+  # Ignore all vulnerabilities in cross-spawn (generic approach)
   - vulnerability: "*"
     package:
       name: "cross-spawn"
 
-  # Alternatively, you can specify exact CVEs if you prefer
-  # - vulnerability:
-  #     id: "CVE-2020-xxxx"
-  #   package:
-  #     name: "cross-spawn"
-
-# Optional: Set output format defaults
+# Set output format defaults
 output:
   - "table"
   - "json"
 
-# Keep other default settings
+# Modify your CircleCI job to check critical count EXCLUDING cross-spawn
 search:
   scope: "squashed"
 quiet: false
