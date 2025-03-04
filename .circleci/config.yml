@@ -450,27 +450,30 @@ jobs:
             cat grype-results.txt
             cat grype-results.json
       - run:
-          name: Check critical vulnerabilities count
+          name: Check for critical, high and medium vulnerabilities
           command: |
-            CRITICAL_COUNT=$(cat grype-results.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
-            echo "Critical vulnerabilities found: $CRITICAL_COUNT"
-      - run:
-          name: Filter out cross-spawn and check critical vulnerabilities count
-          command: |
-            # Use jq to filter out cross-spawn vulnerabilities from the results
-            cat grype-results.json | jq '.matches = [.matches[] | select(.artifact.name != "cross-spawn")]' > filtered-results.json
-
-            # Count critical vulnerabilities in the filtered results
+            # Count vulnerabilities in the filtered results
             CRITICAL_COUNT=$(cat filtered-results.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
-            echo "Critical vulnerabilities found (excluding cross-spawn): $CRITICAL_COUNT"
+            HIGH_COUNT=$(cat filtered-results.json | jq '[.matches[] | select(.vulnerability.severity == "High")] | length')
+            MEDIUM_COUNT=$(cat filtered-results.json | jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length')
 
-            # List remaining high vulnerabilities for awareness
-            echo "High severity vulnerabilities (excluding cross-spawn):"
+            echo "Critical vulnerabilities found: $CRITICAL_COUNT"
+            echo "High vulnerabilities found: $HIGH_COUNT"
+            echo "Medium vulnerabilities found: $MEDIUM_COUNT"
+
+            # List remaining critical, high and medium vulnerabilities for awareness
+            echo "Critical severity vulnerabilities:"
+            cat grype-results.json | jq -r '.matches[] | select(.vulnerability.severity == "Critical") | "- \(.artifact.name) \(.artifact.version): \(.vulnerability.id)"'
+
+            echo "High severity vulnerabilities:"
             cat filtered-results.json | jq -r '.matches[] | select(.vulnerability.severity == "High") | "- \(.artifact.name) \(.artifact.version): \(.vulnerability.id)"'
 
-            # Optional: If you want the job to fail on critical vulnerabilities
-            if [ "$CRITICAL_COUNT" -gt 0 ]; then
-              echo "Critical vulnerabilities found. Failing the build."
+            echo "Medium severity vulnerabilities:"
+            cat filtered-results.json | jq -r '.matches[] | select(.vulnerability.severity == "Medium") | "- \(.artifact.name) \(.artifact.version): \(.vulnerability.id)"'
+
+            # Fail if any critical, high, or medium vulnerabilities are found
+            if [ "$CRITICAL_COUNT" -gt 0 ] || [ "$HIGH_COUNT" -gt 0 ] || [ "$MEDIUM_COUNT" -gt 0 ]; then
+              echo "Critical, High, or Medium vulnerabilities found. Failing the build."
               exit 1
             fi
       - store_artifacts:
