@@ -384,10 +384,10 @@ jobs:
             echo "Critical vulnerabilities found: $CRITICAL_COUNT"
       - store_artifacts:
           path: grype-vulnerabilities.json
-          destination: grype-scan/scan-results-orb.json
+          destination: grype-scan-orb/scan-results-orb.json
       - store_artifacts:
           path: grype-vulnerabilities.txt
-          destination: grype-scan/scan-results-orb.txt
+          destination: grype-scan-orb/scan-results-orb.txt
 
 #  grype-scan:
 #    executor: default-machine
