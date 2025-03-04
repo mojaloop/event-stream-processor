@@ -9,7 +9,7 @@ ignore:
     package:
       name: "cross-spawn"
 
-  # Ignore all vulnerabilities in cross-spawn (generic approach)
+  # Ignore all vulnerabilities in cross-spawn
   - vulnerability: "*"
     package:
       name: "cross-spawn"

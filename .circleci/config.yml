@@ -501,15 +501,25 @@ jobs:
           # exit-code: '1'
           format: 'table'
           output: 'trivy-results.txt'
+          ignore-file: '.trivyignore.yaml'
       - trivy/scan:
           image-ref: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
           format: 'json'
           output: 'trivy-results.json'
+          ignore-file: '.trivyignore.yaml'
       - run:
           name: Check critical vulnerabilities count
           command: |
             CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[] | .Vulnerabilities // [] | .[] | select(.Severity == "CRITICAL")] | length')
             echo "Critical vulnerabilities found: $CRITICAL_COUNT"
+
+            # Optional: Verify cross-spawn vulnerabilities are excluded
+            CROSS_SPAWN_COUNT=$(cat trivy-results.json | jq '[.Results[] | .Vulnerabilities // [] | .[] | select(.PkgName == "cross-spawn")] | length')
+            echo "Cross-spawn vulnerabilities found after filtering: $CROSS_SPAWN_COUNT"
+
+            # List remaining high vulnerabilities for awareness
+            echo "High severity vulnerabilities:"
+            cat trivy-results.json | jq -r '.Results[] | .Vulnerabilities // [] | .[] | select(.Severity == "HIGH") | "- \(.PkgName) \(.InstalledVersion): \(.VulnerabilityID)"'
       - store_artifacts:
           path: trivy-results.json
           destination: trivy-scan/scan-results.json
