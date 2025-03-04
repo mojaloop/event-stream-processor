@@ -499,14 +499,16 @@ jobs:
           # security-checks: vuln
           # severity: 'CRITICAL,HIGH'
           # exit-code: '1'
+          exit-code: '0'
           format: 'table'
           output: 'trivy-results.txt'
-          ignore-file: '.trivyignore.yaml'
+          ignore-policy: '.trivyignore.yaml'
       - trivy/scan:
           image-ref: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
           format: 'json'
           output: 'trivy-results.json'
-          ignore-file: '.trivyignore.yaml'
+          ignore-policy: '.trivyignore.yaml'
+          exit-code: '0'
       - run:
           name: Check critical vulnerabilities count
           command: |
