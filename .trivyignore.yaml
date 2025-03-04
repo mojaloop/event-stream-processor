@@ -1,0 +1,14 @@
+ignorePkgs:
+  - pkg:npm/cross-spawn@*
+
+# Alternatively, can specify exact CVE/GHSA IDs
+ignoreVulns:
+  - CVE-2024-21538
+  - GHSA-3xgq-45jj-v275
+
+# can also be more specific with both package and vulnerability
+# ignoreRules:
+#   - id: CVE-2024-21538
+#     pkg: pkg:npm/cross-spawn@*
+#     until: 2025-12-31T23:59:59Z
+#     reason: "We've assessed this vulnerability and determined it's not exploitable in our context"
