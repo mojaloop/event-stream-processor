@@ -1,0 +1,23 @@
+ignore:
+  # Ignore all vulnerabilities in cross-spawn packages
+  - vulnerability:
+      id: "*"
+    package:
+      name: "cross-spawn"
+
+  # Alternatively, you can specify exact CVEs if you prefer
+  # - vulnerability:
+  #     id: "CVE-2020-xxxx"
+  #   package:
+  #     name: "cross-spawn"
+
+# Optional: Set output format defaults
+output:
+  - "table"
+  - "json"
+
+# Keep other default settings
+search:
+  scope: "squashed"
+quiet: false
+check-for-app-update: false
