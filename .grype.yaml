@@ -1,7 +1,6 @@
 ignore:
   # Ignore all vulnerabilities in cross-spawn packages
-  - vulnerability:
-      id: "*"
+  - vulnerability: "*"
     package:
       name: "cross-spawn"
 
