@@ -488,6 +488,7 @@ jobs:
     environment:
       <<: *defaults_environment
     steps:
+      - checkout  # Add this to get your repo code including the .trivyignore.yaml config
       - attach_workspace:
           at: /tmp
       - run:
@@ -502,12 +503,14 @@ jobs:
           exit-code: '0'
           format: 'table'
           output: 'trivy-results.txt'
-          ignore-policy: '.trivyignore.yaml'
+          # ignore-policy: '.trivyignore.yaml'
+          additional-args: '--ignorefile .trivyignore.yaml'
       - trivy/scan:
           image-ref: ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
           format: 'json'
           output: 'trivy-results.json'
-          ignore-policy: '.trivyignore.yaml'
+          #ignore-policy: '.trivyignore.yaml'
+          additional-args: '--ignorefile .trivyignore.yaml'
           exit-code: '0'
       - run:
           name: Check critical vulnerabilities count
