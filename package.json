@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/mojaloop/event-stream-processor#readme",
   "engines": {
-    "node": "=18.x"
+    "node": ">=22.x"
   },
   "main": "src/index.js",
   "scripts": {
@@ -31,6 +31,9 @@
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "nyc tapes -- 'test/unit/**/*.test.js' | tap-spec; nyc report ---reporter=text",
     "test:coverage-check": "npm run test:coverage && nyc check-coverage",
+    "test:integration": "echo 'No integration tests defined'",
+    "test:functional": "echo 'No functional tests defined'",
+    "audit:fix": "npm audit fix",
     "audit:check": "npx audit-ci --config ./audit-ci.jsonc",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u",
@@ -45,14 +48,14 @@
   "dependencies": {
     "@hapi/catbox": "11.1.1",
     "@hapi/catbox-memory": "5.0.1",
-    "@mojaloop/central-services-health": "15.0.4",
-    "@mojaloop/central-services-logger": "11.5.5",
-    "@mojaloop/central-services-metrics": "12.4.5",
-    "@mojaloop/central-services-shared": "18.19.0",
-    "@mojaloop/central-services-stream": "11.5.1",
+    "@mojaloop/central-services-health": "15.1.0",
+    "@mojaloop/central-services-logger": "11.9.0",
+    "@mojaloop/central-services-metrics": "12.6.0",
+    "@mojaloop/central-services-shared": "18.26.2",
+    "@mojaloop/central-services-stream": "11.6.0",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.0-snapshot",
-    "@mojaloop/event-sdk": "14.1.5",
+    "@mojaloop/event-sdk": "14.5.1",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.7.3",
     "fluent-logger": "3.4.1",
@@ -68,7 +71,7 @@
     "audit-ci": "7.1.0",
     "eslint": "8.57.1",
     "faucet": "0.0.4",
-    "npm-check-updates": "17.1.15",
+    "npm-check-updates": "18.0.1",
     "nyc": "17.1.0",
     "pre-commit": "1.2.2",
     "replace": "1.2.2",
@@ -91,7 +94,7 @@
     "trim": "0.0.3",
     "cookie": "1.0.2",
     "cross-spawn": "7.0.6",
-    "undici": "6.21.1",
+    "undici": "6.21.2",
     "yargs-parser": "21.1.1"
   },
   "standard-version": {
