@@ -31,6 +31,7 @@
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "nyc tapes -- 'test/unit/**/*.test.js' | tap-spec; nyc report ---reporter=text",
     "test:coverage-check": "npm run test:coverage && nyc check-coverage",
+    "audit:fix": "npm audit fix",
     "audit:check": "npx audit-ci --config ./audit-ci.jsonc",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u",
