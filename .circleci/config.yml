@@ -502,6 +502,19 @@ jobs:
             echo "export SLACK_RELEASE_URL=https://github.com/mojaloop/${CIRCLE_PROJECT_REPONAME}/releases/tag/v${RELEASE_TAG}" >> $BASH_ENV
             echo "export SLACK_BUILD_ID=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             echo "export SLACK_CI_URL=${CIRCLE_BUILD_URL}" >> $BASH_ENV
+      - run:                                                                      
+          name: Generate SBOM                                                     
+          command: |                                                              
+              git fetch origin "$CIRCLE_BRANCH"                                   
+              git checkout -B "$CIRCLE_BRANCH" "origin/$CIRCLE_BRANCH"            
+              git pull --rebase origin "${CIRCLE_BRANCH}" || echo "Git pull failed
+              rm -f sbom-*.csv                                                    
+              # Generate new SBOM                                                 
+              echo "Generating SBOM using NPM"                                    
+              npx -y --package @mojaloop/ml-depcheck-utility@1.1.3 generate-sbom-n
+              git add .                                                           
+              git commit -m "chore(sbom): update sbom [skip ci]" || echo "No chang
+              git push origin "${CIRCLE_BRANCH}" || echo "Git push failed" 
       - run:
           name: Create Release
           command: |
