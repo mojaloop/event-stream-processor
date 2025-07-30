@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [12.0.0-snapshot.18](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.17...v12.0.0-snapshot.18) (2025-07-30)
+
+
+### Bug Fixes
+
+* sbom generation ([d3c4b30](https://github.com/mojaloop/event-stream-processor/commit/d3c4b3069477d461568d925bca9b3db605bef971))
+
 ## [12.0.0-snapshot.17](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.16...v12.0.0-snapshot.17) (2025-07-29)
 
 ## [12.0.0-snapshot.16](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.15...v12.0.0-snapshot.16) (2025-07-25)
