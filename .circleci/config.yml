@@ -142,7 +142,7 @@ executors:
       BASH_ENV: /etc/profile ## Ref: https://circleci.com/docs/env-vars/#alpine-linux
       NVM_ARCH_UNOFFICIAL_OVERRIDE: x64-musl ## Ref: https://github.com/nvm-sh/nvm/issues/1102#issuecomment-550572252
     docker:
-      - image: node:lts-alpine # Ref: https://hub.docker.com/_/node?tab=tags&page=1&name=alpine
+      - image: node:22.15.1-alpine3.21 # Ref: https://hub.docker.com/_/node/tags?name=22.15.0-alpine3.21
 
   default-machine:
     working_directory: *WORKING_DIR
@@ -504,17 +504,17 @@ jobs:
             echo "export SLACK_CI_URL=${CIRCLE_BUILD_URL}" >> $BASH_ENV
       - run:                                                                      
           name: Generate SBOM                                                     
-          command: |                                                              
-              git fetch origin "$CIRCLE_BRANCH"                                   
-              git checkout -B "$CIRCLE_BRANCH" "origin/$CIRCLE_BRANCH"            
-              git pull --rebase origin "${CIRCLE_BRANCH}" || echo "Git pull failed
-              rm -f sbom-*.csv                                                    
-              # Generate new SBOM                                                 
-              echo "Generating SBOM using NPM"                                    
-              npx -y --package @mojaloop/ml-depcheck-utility@1.1.3 generate-sbom-n
-              git add .                                                           
-              git commit -m "chore(sbom): update sbom [skip ci]" || echo "No changes to commit"
-              git push origin "${CIRCLE_BRANCH}" || echo "Git push failed" 
+          command: |
+            git fetch origin "$CIRCLE_BRANCH"
+            git checkout -B "$CIRCLE_BRANCH" "origin/$CIRCLE_BRANCH"
+            git pull --rebase origin "${CIRCLE_BRANCH}" || echo "Git pull failed"
+            rm -f sbom-*.csv
+            # Generate new SBOM
+            echo "Generating SBOM using NPM"
+            npx -y --package @mojaloop/ml-depcheck-utility@1.1.3 generate-sbom-npm
+            git add .
+            git commit -m "chore(sbom): update sbom [skip ci]" || echo "No changes to commit"
+            git push origin "${CIRCLE_BRANCH}" || echo "Git push failed"
       - run:
           name: Create Release
           command: |
