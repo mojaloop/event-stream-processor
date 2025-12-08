@@ -46,14 +46,14 @@
   "dependencies": {
     "@hapi/catbox": "11.1.1",
     "@hapi/catbox-memory": "5.0.1",
-    "@mojaloop/central-services-health": "15.2.0",
-    "@mojaloop/central-services-logger": "11.10.1",
-    "@mojaloop/central-services-metrics": "12.8.0",
-    "@mojaloop/central-services-shared": "18.34.1",
-    "@mojaloop/central-services-stream": "11.8.8",
+    "@mojaloop/central-services-health": "15.2.1",
+    "@mojaloop/central-services-logger": "11.10.2",
+    "@mojaloop/central-services-metrics": "12.8.2",
+    "@mojaloop/central-services-shared": "18.34.4",
+    "@mojaloop/central-services-stream": "11.8.13",
     "@mojaloop/elastic-apm-node": "6.4.0-snapshot",
     "@mojaloop/elastic-apm-node-opentracing": "6.4.0-snapshot",
-    "@mojaloop/event-sdk": "14.8.0",
+    "@mojaloop/event-sdk": "14.8.2",
     "deserialize-error": "0.0.3",
     "elasticsearch": "16.7.3",
     "fluent-logger": "3.4.1",
@@ -69,7 +69,7 @@
     "audit-ci": "7.1.0",
     "eslint": "8.57.1",
     "faucet": "0.0.4",
-    "npm-check-updates": "19.0.0",
+    "npm-check-updates": "19.1.2",
     "nyc": "17.1.0",
     "pre-commit": "1.2.2",
     "replace": "1.2.2",
@@ -94,7 +94,8 @@
     "trim": "0.0.3",
     "cookie": "1.0.2",
     "cross-spawn": "7.0.6",
-    "yargs-parser": "21.1.1"
+    "yargs-parser": "21.1.1",
+    "js-yaml": "4.1.1"
   },
   "standard-version": {
     "scripts": {
