@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [12.0.0-snapshot.23](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.22...v12.0.0-snapshot.23) (2026-01-14)
+
 ## [12.0.0-snapshot.22](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.21...v12.0.0-snapshot.22) (2025-12-08)
 
 ## [12.0.0-snapshot.21](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.20...v12.0.0-snapshot.21) (2025-10-09)
