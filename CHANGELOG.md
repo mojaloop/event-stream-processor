@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [12.0.0-snapshot.24](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.23...v12.0.0-snapshot.24) (2026-02-12)
+
+
+### Features
+
+* replace Consumer.isConnected with consumer.isHealthy() for Kafka health checks ([24f2950](https://github.com/mojaloop/event-stream-processor/commit/24f2950b2b151f70daa15dc261ae13e8d58c4f92)), closes [#1238](https://github.com/mojaloop/event-stream-processor/issues/1238)
+
+
+### Bug Fixes
+
+* add lodash override and allowlist yargs-parser for audit-ci ([698310f](https://github.com/mojaloop/event-stream-processor/commit/698310fcf2963136b41e9cf89232af286dda7be9))
+
 ## [12.0.0-snapshot.23](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.22...v12.0.0-snapshot.23) (2026-01-14)
 
 ## [12.0.0-snapshot.22](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.21...v12.0.0-snapshot.22) (2025-12-08)
