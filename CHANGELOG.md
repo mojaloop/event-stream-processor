@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [12.0.0-snapshot.25](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.24...v12.0.0-snapshot.25) (2026-02-23)
+
+
+### Bug Fixes
+
+* bump fast-xml-parser override to 5.3.6, remove minimatch override ([1960b93](https://github.com/mojaloop/event-stream-processor/commit/1960b93a966d26ae0b849776b3fba33dc19003d8))
+* remove duplicate GHSA-3ppc-4f35-3m26 entry from .grype.yaml ([4cbedd0](https://github.com/mojaloop/event-stream-processor/commit/4cbedd01d355b8932f14368cb6a88a52f597be76))
+
 ## [12.0.0-snapshot.24](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.23...v12.0.0-snapshot.24) (2026-02-12)
 
 
