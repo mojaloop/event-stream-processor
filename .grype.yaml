@@ -25,12 +25,9 @@ ignore:
   - vulnerability: CVE-2026-27171
     include-aliases: true
     reason: "Alpine base image package (apk): zlib - no npm fix available as of 2026-02-23 (moderate severity)"
-  - vulnerability: GHSA-m7jm-9gc2-mpf2
+  - vulnerability: GHSA-3ppc-4f35-3m26
     include-aliases: true
-    reason: "Unfixable npm transitive vulnerability: fast-xml-parser (critical severity) as of 2026-02-23"
-  - vulnerability: GHSA-jmr7-xgp7-cmfj
-    include-aliases: true
-    reason: "Unfixable npm transitive vulnerability: fast-xml-parser (high severity) as of 2026-02-23"
+    reason: "Unfixable npm transitive vulnerability: minimatch ReDoS - fix requires v10 major version break as of 2026-02-23"
   - vulnerability: GHSA-p9pc-299p-vxgp
     include-aliases: true
     reason: "Unfixable npm transitive vulnerability: yargs-parser (moderate severity) as of 2026-02-23"
