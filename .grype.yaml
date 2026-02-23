@@ -1,9 +1,4 @@
 ignore:
-  - vulnerability: GHSA-3ppc-4f35-3m26
-    include-aliases: true
-    reason: >-
-      Base image npm package: minimatch - bundled in Node.js base image, not fixable via application dependencies as of
-      2026-02-23 (high severity)
   - vulnerability: CVE-2025-60876
     include-aliases: true
     reason: "Alpine base image package (apk): busybox - no npm fix available as of 2026-02-23 (moderate severity)"
