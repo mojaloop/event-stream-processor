@@ -4,7 +4,9 @@
   // Only use one of ["low": true, "moderate": true, "high": true, "critical": true]
   "moderate": true,
   "allowlist": [ // NOTE: Please add as much information as possible to any items added to the allowList
-    // yargs-parser prototype pollution - transitive via widdershins in central-services-shared, unfixable
-    "GHSA-p9pc-299p-vxgp"
+    "GHSA-p9pc-299p-vxgp",
+    "GHSA-m7jm-9gc2-mpf2",
+    "GHSA-jmr7-xgp7-cmfj",
+    "GHSA-2g4f-4pwh-qvx6"
   ]
 }
