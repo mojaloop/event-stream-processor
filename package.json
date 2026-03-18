@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "12.0.0-snapshot.26",
+  "version": "12.0.0",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "repository": {
     "type": "git",
@@ -35,8 +35,9 @@
     "audit:check": "npx audit-ci --config ./audit-ci.jsonc",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u",
-    "release": "npx standard-version --no-verify --prerelease snapshot --releaseCommitMessageFormat 'chore(snapshot): {{currentTag}} [skip ci]'",
-    "releaseReplaceTheAboveWhenNotEXPERIMENTAL": "npx standard-version --no-verify --releaseCommitMessageFormat 'chore(release): {{currentTag}} [skip ci]'",
+    "test:integration": "echo 'No integration tests defined'",
+    "test:functional": "echo 'No functional tests defined'",
+    "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'chore(release): {{currentTag}} [skip ci]'",
     "snapshot": "npx standard-version --no-verify --skip.changelog --prerelease snapshot --releaseCommitMessageFormat 'chore(snapshot): {{currentTag}}'"
   },
   "pre-commit": [
