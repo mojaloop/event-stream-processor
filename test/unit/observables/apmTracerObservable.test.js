@@ -12,6 +12,49 @@ process.on('unhandledRejection', (err) => {
 // Force exit after all tests complete (async schedulers keep event loop alive)
 test.onFinish(() => process.exit(0))
 
+// --- Shared fixture factories ---
+
+const createApmSpanContext = (overrides) => ({
+  service: 'test-svc',
+  traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
+  parentSpanId: null,
+  spanId: '1111222233334444',
+  startTimestamp: '2026-01-01T00:00:00Z',
+  finishTimestamp: '2026-01-01T00:00:01Z',
+  flags: 1,
+  tags: { tracestate: '' },
+  version: 0,
+  ...overrides
+})
+
+const createStartSpanContext = (overrides) => ({
+  traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
+  spanId: 'span1',
+  parentSpanId: null,
+  tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
+  service: 'ml_transfer_prepare',
+  startTimestamp: '2026-01-01T00:00:00Z',
+  finishTimestamp: '2026-01-01T00:00:01Z',
+  ...overrides
+})
+
+const createTraceEntry = (spanCtxOverrides, state, content) => ({
+  spanContext: createApmSpanContext(spanCtxOverrides),
+  state: state || { status: 'success' },
+  content: content || {}
+})
+
+const cacheStartSpan = (mod, spanCtxOverrides) => {
+  const cacheObs = mod.cacheSpanContextObservable({
+    spanContext: createStartSpanContext(spanCtxOverrides),
+    state: { status: 'success' },
+    content: {}
+  })
+  cacheObs.subscribe({ next: () => {}, error: () => {} })
+}
+
+// --- Module setup ---
+
 const setupModule = (overrides = {}) => {
   const spanMock = {
     setTag: sinon.stub(),
@@ -225,18 +268,8 @@ test('cacheSpanContextObservable - start span creates master span', t => {
   const { mod } = setupModule({ clientGet, clientSet })
 
   mod.initializeCache().then(() => {
-    const spanContext = {
-      traceId: 'trace1',
-      spanId: 'span1',
-      parentSpanId: null,
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare',
-      startTimestamp: '2026-01-01T00:00:00Z',
-      finishTimestamp: '2026-01-01T00:00:01Z'
-    }
-
     const observable = mod.cacheSpanContextObservable({
-      spanContext,
+      spanContext: createStartSpanContext({ traceId: 'trace1' }),
       state: { status: 'success' },
       content: {}
     })
@@ -271,17 +304,12 @@ test('cacheSpanContextObservable - with parent and cache', t => {
   const { mod } = setupModule({ clientGet, clientSet })
 
   mod.initializeCache().then(() => {
-    const spanContext = {
-      traceId: 'trace1',
-      spanId: 'span2',
-      parentSpanId: 'masterSpan1',
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare',
-      startTimestamp: '2026-01-01T00:00:00Z'
-    }
-
     const observable = mod.cacheSpanContextObservable({
-      spanContext,
+      spanContext: createStartSpanContext({
+        traceId: 'trace1',
+        spanId: 'span2',
+        parentSpanId: 'masterSpan1'
+      }),
       state: { status: 'success' },
       content: {}
     })
@@ -302,16 +330,8 @@ test('cacheSpanContextObservable - error path', t => {
   const { mod } = setupModule({ clientGet })
 
   mod.initializeCache().then(() => {
-    const spanContext = {
-      traceId: 'trace1',
-      spanId: 'span1',
-      parentSpanId: 'parent1',
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare'
-    }
-
     const observable = mod.cacheSpanContextObservable({
-      spanContext,
+      spanContext: createStartSpanContext({ traceId: 'trace1', parentSpanId: 'parent1' }),
       state: { status: 'success' },
       content: {}
     })
@@ -428,24 +448,19 @@ test('recreateTraceObservable - error path', t => {
 })
 
 test('recreateTraceObservable - with lastSpan and masterSpan', t => {
-  const masterCtx = {
-    traceId: 'trace1',
+  const masterCtx = createApmSpanContext({
     spanId: 'master1',
-    parentSpanId: null,
     tags: { transactionType: 'transfer', transactionAction: 'prepare' },
-    service: 'master-transfer',
-    startTimestamp: '2026-01-01T00:00:00Z',
-    finishTimestamp: '2026-01-01T00:00:01Z'
-  }
-  const childCtx = {
-    traceId: 'trace1',
+    service: 'master-transfer'
+  })
+  const childCtx = createApmSpanContext({
     spanId: 'child1',
     parentSpanId: 'master1',
     tags: { transactionType: 'transfer', transactionAction: 'fulfil' },
     service: 'ml_notification_event',
     startTimestamp: '2026-01-01T00:00:02Z',
     finishTimestamp: '2026-01-01T00:00:03Z'
-  }
+  })
   const cachedTrace = {
     item: {
       spans: {
@@ -489,23 +504,9 @@ test('sendTraceToApmObservable - sends spans and drops cache', t => {
   const { mod, tracerMock, spanMock } = setupModule({ clientDrop })
 
   mod.initializeCache().then(() => {
-    const trace = [
-      {
-        spanContext: {
-          service: 'test-svc',
-          traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
-          parentSpanId: null,
-          spanId: '1111222233334444',
-          startTimestamp: '2026-01-01T00:00:00Z',
-          finishTimestamp: '2026-01-01T00:00:01Z',
-          flags: 1,
-          tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-          version: 0
-        },
-        state: { status: 'success' },
-        content: {}
-      }
-    ]
+    const trace = [createTraceEntry({
+      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' }
+    })]
 
     const observable = mod.sendTraceToApmObservable(trace)
 
@@ -527,23 +528,11 @@ test('sendTraceToApmObservable - failed span with content.error', t => {
   const { mod, spanMock } = setupModule({ clientDrop })
 
   mod.initializeCache().then(() => {
-    const trace = [
-      {
-        spanContext: {
-          service: 'test-svc',
-          traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
-          parentSpanId: null,
-          spanId: '1111222233334444',
-          startTimestamp: '2026-01-01T00:00:00Z',
-          finishTimestamp: '2026-01-01T00:00:01Z',
-          flags: 1,
-          tags: { tracestate: '' },
-          version: 0
-        },
-        state: { status: 'failed', code: '3100', description: 'transfer failed' },
-        content: { error: { message: 'some error' } }
-      }
-    ]
+    const trace = [createTraceEntry(
+      {},
+      { status: 'failed', code: '3100', description: 'transfer failed' },
+      { error: { message: 'some error' } }
+    )]
 
     const observable = mod.sendTraceToApmObservable(trace)
 
@@ -563,23 +552,11 @@ test('sendTraceToApmObservable - failed span with content.payload', t => {
   const { mod, spanMock } = setupModule({ clientDrop })
 
   mod.initializeCache().then(() => {
-    const trace = [
-      {
-        spanContext: {
-          service: 'test-svc',
-          traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
-          parentSpanId: null,
-          spanId: '1111222233334444',
-          startTimestamp: '2026-01-01T00:00:00Z',
-          finishTimestamp: '2026-01-01T00:00:01Z',
-          flags: 1,
-          tags: { tracestate: '' },
-          version: 0
-        },
-        state: { status: 'failed', code: '3100', description: 'transfer failed' },
-        content: { payload: 'error payload data' }
-      }
-    ]
+    const trace = [createTraceEntry(
+      {},
+      { status: 'failed', code: '3100', description: 'transfer failed' },
+      { payload: 'error payload data' }
+    )]
 
     const observable = mod.sendTraceToApmObservable(trace)
 
@@ -599,25 +576,7 @@ test('sendTraceToApmObservable - error path', t => {
   const { mod } = setupModule({ clientDrop })
 
   mod.initializeCache().then(() => {
-    const trace = [
-      {
-        spanContext: {
-          service: 'test-svc',
-          traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
-          parentSpanId: null,
-          spanId: '1111222233334444',
-          startTimestamp: '2026-01-01T00:00:00Z',
-          finishTimestamp: '2026-01-01T00:00:01Z',
-          flags: 1,
-          tags: { tracestate: '' },
-          version: 0
-        },
-        state: { status: 'success' },
-        content: {}
-      }
-    ]
-
-    const observable = mod.sendTraceToApmObservable(trace)
+    const observable = mod.sendTraceToApmObservable([createTraceEntry()])
 
     observable.subscribe({
       error: (e) => {
@@ -636,46 +595,14 @@ test('sendTraceToApmObservable - cleans up scheduler', t => {
   const { mod } = setupModule({ clientDrop, clientGet, clientSet })
 
   mod.initializeCache().then(async () => {
-    // First, create a scheduler entry by caching a start span
-    const spanContext = {
-      traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
-      spanId: 'span1',
-      parentSpanId: null,
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare',
-      startTimestamp: '2026-01-01T00:00:00Z',
-      finishTimestamp: '2026-01-01T00:00:01Z'
-    }
+    cacheStartSpan(mod)
 
-    const cacheObs = mod.cacheSpanContextObservable({
-      spanContext,
-      state: { status: 'success' },
-      content: {}
-    })
-
-    cacheObs.subscribe({ next: () => {}, error: () => {} })
-
-    // Wait for caching to complete then send the trace
     setTimeout(() => {
-      const trace = [{
-        spanContext: {
-          service: 'test-svc',
-          traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
-          parentSpanId: null,
-          spanId: '1111222233334444',
-          startTimestamp: '2026-01-01T00:00:00Z',
-          finishTimestamp: '2026-01-01T00:00:01Z',
-          flags: 1,
-          tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-          version: 0
-        },
-        state: { status: 'success' },
-        content: {}
-      }]
+      const trace = [createTraceEntry({
+        tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' }
+      })]
 
-      const observable = mod.sendTraceToApmObservable(trace)
-
-      observable.subscribe({
+      mod.sendTraceToApmObservable(trace).subscribe({
         next: (val) => {
           t.equal(val, 'aaaa1111bbbb2222cccc3333dddd4444', 'emits traceId')
           t.ok(clientDrop.called, 'client.drop called')
@@ -688,28 +615,19 @@ test('sendTraceToApmObservable - cleans up scheduler', t => {
 })
 
 test('finishStaleTrace - processes stale spans via scheduler callback', t => {
-  const masterCtx = {
-    traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
+  const masterCtx = createApmSpanContext({
     spanId: 'master1',
-    parentSpanId: null,
     tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-    service: 'master-transfer',
-    startTimestamp: '2026-01-01T00:00:00Z',
-    finishTimestamp: '2026-01-01T00:00:01Z',
-    flags: 1,
-    version: 0
-  }
-  const childCtx = {
-    traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
+    service: 'master-transfer'
+  })
+  const childCtx = createApmSpanContext({
     spanId: 'child1',
     parentSpanId: 'master1',
     tags: { transactionType: 'transfer', transactionAction: 'fulfil', tracestate: '' },
     service: 'ml_notification_event',
     startTimestamp: '2026-01-01T00:00:01Z',
-    finishTimestamp: '2026-01-01T00:00:02Z',
-    flags: 1,
-    version: 0
-  }
+    finishTimestamp: '2026-01-01T00:00:02Z'
+  })
 
   const cachedTraceForFinish = {
     item: {
@@ -738,26 +656,8 @@ test('finishStaleTrace - processes stale spans via scheduler callback', t => {
   })
 
   mod.initializeCache().then(async () => {
-    // Trigger cacheSpanContextObservable to create a scheduler entry
-    const spanContext = {
-      traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
-      spanId: 'span1',
-      parentSpanId: null,
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare',
-      startTimestamp: '2026-01-01T00:00:00Z',
-      finishTimestamp: '2026-01-01T00:00:01Z'
-    }
+    cacheStartSpan(mod)
 
-    const cacheObs = mod.cacheSpanContextObservable({
-      spanContext,
-      state: { status: 'success' },
-      content: {}
-    })
-
-    cacheObs.subscribe({ next: () => {}, error: () => {} })
-
-    // Wait for caching, then invoke the scheduled finishStaleTrace callback
     setTimeout(async () => {
       t.ok(scheduledCallbacks.length > 0, 'scheduler callback was registered')
 
@@ -782,24 +682,7 @@ test('finishStaleTrace - no cache returns early', t => {
   })
 
   mod.initializeCache().then(async () => {
-    // Trigger cacheSpanContextObservable to set up a scheduler
-    const spanContext = {
-      traceId: 'trace-empty',
-      spanId: 'span1',
-      parentSpanId: null,
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare',
-      startTimestamp: '2026-01-01T00:00:00Z',
-      finishTimestamp: '2026-01-01T00:00:01Z'
-    }
-
-    const cacheObs = mod.cacheSpanContextObservable({
-      spanContext,
-      state: { status: 'success' },
-      content: {}
-    })
-
-    cacheObs.subscribe({ next: () => {}, error: () => {} })
+    cacheStartSpan(mod, { traceId: 'trace-empty' })
 
     setTimeout(async () => {
       if (scheduledCallbacks.length > 0) {
@@ -824,23 +707,7 @@ test('finishStaleTrace - error path logs error', t => {
   })
 
   mod.initializeCache().then(() => {
-    const spanContext = {
-      traceId: 'trace-err',
-      spanId: 'span1',
-      parentSpanId: null,
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare',
-      startTimestamp: '2026-01-01T00:00:00Z',
-      finishTimestamp: '2026-01-01T00:00:01Z'
-    }
-
-    const cacheObs = mod.cacheSpanContextObservable({
-      spanContext,
-      state: { status: 'success' },
-      content: {}
-    })
-
-    cacheObs.subscribe({ next: () => {}, error: () => {} })
+    cacheStartSpan(mod, { traceId: 'trace-err' })
 
     setTimeout(async () => {
       if (scheduledCallbacks.length > 0) {
@@ -867,15 +734,7 @@ test('updateTraceToCache - unsubscribes existing scheduler', t => {
   const { mod } = setupModule({ clientGet, clientSet })
 
   mod.initializeCache().then(() => {
-    const spanContext = {
-      traceId: 'trace-resub',
-      spanId: 'span1',
-      parentSpanId: null,
-      tags: { transactionType: 'transfer', transactionAction: 'prepare', tracestate: '' },
-      service: 'ml_transfer_prepare',
-      startTimestamp: '2026-01-01T00:00:00Z',
-      finishTimestamp: '2026-01-01T00:00:01Z'
-    }
+    const spanContext = createStartSpanContext({ traceId: 'trace-resub' })
 
     // First cache to create scheduler
     const obs1 = mod.cacheSpanContextObservable({

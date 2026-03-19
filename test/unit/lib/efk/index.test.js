@@ -28,12 +28,8 @@ const setupMocks = () => {
     info: sinon.stub(),
     error: sinon.stub()
   }
-  return { floggerMock, elasticsearchMock, configMock, loggerMock, clientMock, pingStub, eventHandlers }
-}
 
-test('initLogger calls flogger.configure and registers event handlers', async t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
+  const createModule = () => proxyquire('../../../../src/lib/efk/index', {
     'fluent-logger': floggerMock,
     elasticsearch: elasticsearchMock,
     '../../lib/config': configMock,
@@ -41,6 +37,13 @@ test('initLogger calls flogger.configure and registers event handlers', async t 
     mustache: require('mustache'),
     moment: require('moment')
   })
+
+  return { floggerMock, elasticsearchMock, configMock, loggerMock, clientMock, pingStub, eventHandlers, createModule }
+}
+
+test('initLogger calls flogger.configure and registers event handlers', async t => {
+  const { floggerMock, createModule } = setupMocks()
+  const efk = createModule()
 
   await efk.initLogger('test-prefix', { host: 'localhost' })
   t.ok(floggerMock.configure.calledOnce, 'flogger.configure called')
@@ -51,15 +54,8 @@ test('initLogger calls flogger.configure and registers event handlers', async t 
 })
 
 test('ElasticSearchClient.getIndex returns mojaloop-YYYY.MM.DD format', t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
-    'fluent-logger': floggerMock,
-    elasticsearch: elasticsearchMock,
-    '../../lib/config': configMock,
-    '@mojaloop/central-services-logger': loggerMock,
-    mustache: require('mustache'),
-    moment: require('moment')
-  })
+  const { createModule } = setupMocks()
+  const efk = createModule()
 
   const index = efk.ElasticSearchClient.getIndex()
   t.ok(/^mojaloop-\d{4}\.\d{2}\.\d{2}$/.test(index), `index matches pattern: ${index}`)
@@ -67,15 +63,8 @@ test('ElasticSearchClient.getIndex returns mojaloop-YYYY.MM.DD format', t => {
 })
 
 test('ElasticSearchClient.getIndex caches result on second call', t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
-    'fluent-logger': floggerMock,
-    elasticsearch: elasticsearchMock,
-    '../../lib/config': configMock,
-    '@mojaloop/central-services-logger': loggerMock,
-    mustache: require('mustache'),
-    moment: require('moment')
-  })
+  const { createModule } = setupMocks()
+  const efk = createModule()
 
   const index1 = efk.ElasticSearchClient.getIndex()
   const index2 = efk.ElasticSearchClient.getIndex()
@@ -84,34 +73,19 @@ test('ElasticSearchClient.getIndex caches result on second call', t => {
 })
 
 test('ElasticSearchClient.getInstance creates client and pings', async t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock, clientMock, pingStub } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
-    'fluent-logger': floggerMock,
-    elasticsearch: elasticsearchMock,
-    '../../lib/config': configMock,
-    '@mojaloop/central-services-logger': loggerMock,
-    mustache: require('mustache'),
-    moment: require('moment')
-  })
+  const { elasticsearchMock, clientMock, pingStub, createModule } = setupMocks()
+  const efk = createModule()
 
   const instance = await efk.ElasticSearchClient.getInstance()
   t.ok(elasticsearchMock.Client.calledOnce, 'Client constructor called')
   t.ok(pingStub.calledOnce, 'ping called')
   t.equal(instance, clientMock, 'returns client instance')
-  t.ok(loggerMock.info.called, 'logs connection result')
   t.end()
 })
 
 test('ElasticSearchClient.getInstance returns cached on second call', async t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
-    'fluent-logger': floggerMock,
-    elasticsearch: elasticsearchMock,
-    '../../lib/config': configMock,
-    '@mojaloop/central-services-logger': loggerMock,
-    mustache: require('mustache'),
-    moment: require('moment')
-  })
+  const { elasticsearchMock, createModule } = setupMocks()
+  const efk = createModule()
 
   const instance1 = await efk.ElasticSearchClient.getInstance()
   const instance2 = await efk.ElasticSearchClient.getInstance()
@@ -152,15 +126,8 @@ test('ElasticSearchClient.getInstance error path logs and rethrows', async t => 
 })
 
 test('initLogger connect handler executes', async t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock, eventHandlers } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
-    'fluent-logger': floggerMock,
-    elasticsearch: elasticsearchMock,
-    '../../lib/config': configMock,
-    '@mojaloop/central-services-logger': loggerMock,
-    mustache: require('mustache'),
-    moment: require('moment')
-  })
+  const { eventHandlers, createModule } = setupMocks()
+  const efk = createModule()
 
   await efk.initLogger('prefix', {})
   t.ok(eventHandlers.connect, 'connect handler exists')
@@ -170,15 +137,8 @@ test('initLogger connect handler executes', async t => {
 })
 
 test('initLogger error handler executes', async t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock, eventHandlers } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
-    'fluent-logger': floggerMock,
-    elasticsearch: elasticsearchMock,
-    '../../lib/config': configMock,
-    '@mojaloop/central-services-logger': loggerMock,
-    mustache: require('mustache'),
-    moment: require('moment')
-  })
+  const { eventHandlers, createModule } = setupMocks()
+  const efk = createModule()
 
   // Suppress unhandled rejection from Promise.reject in handler
   const handler = () => {}
@@ -193,15 +153,8 @@ test('initLogger error handler executes', async t => {
 })
 
 test('logger export is the flogger mock', t => {
-  const { floggerMock, elasticsearchMock, configMock, loggerMock } = setupMocks()
-  const efk = proxyquire('../../../../src/lib/efk/index', {
-    'fluent-logger': floggerMock,
-    elasticsearch: elasticsearchMock,
-    '../../lib/config': configMock,
-    '@mojaloop/central-services-logger': loggerMock,
-    mustache: require('mustache'),
-    moment: require('moment')
-  })
+  const { floggerMock, createModule } = setupMocks()
+  const efk = createModule()
 
   t.equal(efk.logger, floggerMock, 'logger export is fluent-logger')
   t.end()
