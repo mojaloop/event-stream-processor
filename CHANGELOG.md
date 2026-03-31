@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.0.1](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.26...v12.0.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* add tap-xunit devDependency for CI xunit test output ([1e4e80b](https://github.com/mojaloop/event-stream-processor/commit/1e4e80b55710521970992f40eb3a1cba47185c15))
+* **security:** update npm overrides to resolve CI vulnerabilities ([fc0b06c](https://github.com/mojaloop/event-stream-processor/commit/fc0b06c1f95328f3f710902ba91bf598d0d19ee4))
+
 ## [12.0.0-snapshot.26](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.25...v12.0.0-snapshot.26) (2026-02-25)
 
 ## [12.0.0-snapshot.25](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.24...v12.0.0-snapshot.25) (2026-02-23)
