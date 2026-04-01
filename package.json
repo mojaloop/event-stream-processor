@@ -70,7 +70,7 @@
     "audit-ci": "7.1.0",
     "eslint": "8.57.1",
     "faucet": "0.0.4",
-    "npm-check-updates": "19.6.6",
+    "npm-check-updates": "20.0.0",
     "nyc": "18.0.0",
     "pre-commit": "1.2.2",
     "replace": "1.2.2",
