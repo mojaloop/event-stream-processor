@@ -5,7 +5,7 @@
 [![Docker pulls](https://img.shields.io/docker/pulls/mojaloop/event-stream-processor.svg?style=flat)](https://hub.docker.com/r/mojaloop/event-stream-processor)
 [![CircleCI](https://circleci.com/gh/mojaloop/event-stream-processor.svg?style=svg)](https://app.circleci.com/pipelines/github/mojaloop/event-stream-processor)
 
-**EXPERIMENTAL** Event Stream Processor (ESP) for Event Stream (logs, audits, errors, trace, etc)
+Event Stream Processor (ESP) for Event Stream (logs, audits, errors, trace, etc)
 
 ## TODO
 

@@ -1,7 +1,6 @@
 {
   "name": "@mojaloop/event-stream-processor",
-  "version": "12.0.0-snapshot.26",
-  "private": true,
+  "version": "12.0.1",
   "description": "event stream processor to monitor kafka event topic and create traces and store logs to efk stack with APM",
   "repository": {
     "type": "git",
@@ -30,14 +29,15 @@
     "lint:fix": "npm run standard:fix",
     "test:unit": "tape 'test/unit/**/*.test.js'",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
-    "test:coverage": "nyc tapes -- 'test/unit/**/*.test.js' | tap-spec; nyc report ---reporter=text",
+    "test:coverage": "nyc tapes -- 'test/unit/**/*.test.js' | tap-spec; nyc report --reporter=text",
     "test:coverage-check": "npm run test:coverage && nyc check-coverage",
     "audit:fix": "npm audit fix",
     "audit:check": "npx audit-ci --config ./audit-ci.jsonc",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u",
-    "release": "npx standard-version --no-verify --prerelease snapshot --releaseCommitMessageFormat 'chore(snapshot): {{currentTag}} [skip ci]'",
-    "releaseReplaceTheAboveWhenNotEXPERIMENTAL": "npx standard-version --no-verify --releaseCommitMessageFormat 'chore(release): {{currentTag}} [skip ci]'",
+    "test:integration": "echo 'No integration tests defined'",
+    "test:functional": "echo 'No functional tests defined'",
+    "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'chore(release): {{currentTag}} [skip ci]'",
     "snapshot": "npx standard-version --no-verify --skip.changelog --prerelease snapshot --releaseCommitMessageFormat 'chore(snapshot): {{currentTag}}'"
   },
   "pre-commit": [
@@ -77,7 +77,11 @@
     "standard": "17.1.2",
     "standard-version": "9.5.0",
     "tap-spec": "5.0.0",
-    "tape": "5.9.0"
+    "tap-xunit": "2.4.1",
+    "proxyquire": "2.1.3",
+    "sinon": "21.0.3",
+    "tape": "5.9.0",
+    "tapes": "4.1.0"
   },
   "overrides": {
     "form-data": "4.0.5",
@@ -97,7 +101,7 @@
     "cross-spawn": "7.0.6",
     "js-yaml": "4.1.1",
     "qs": "6.14.2",
-    "axios": "1.13.5",
+    "axios": "1.13.6",
     "fast-xml-parser": "5.5.9",
     "undici": "7.24.6",
     "lodash": "4.17.23",
@@ -106,6 +110,12 @@
     "convict": "6.2.5",
     "yaml": "2.8.3",
     "immutable": "5.1.5"
+    "flatted": "3.4.2",
+    "minimatch@3.1.3": "3.1.5",
+    "minimatch@5.1.7": "5.1.8",
+    "replace": {
+      "minimatch": "3.1.5"
+    }
   },
   "standard-version": {
     "scripts": {
