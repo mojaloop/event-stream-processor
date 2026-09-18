@@ -15,15 +15,17 @@ USER root
 
 WORKDIR /opt/app
 
-RUN apk --no-cache add git
-RUN apk add --no-cache -t build-dependencies make gcc g++ python3 libtool openssl-dev autoconf automake bash \
-    && cd $(npm root -g)/npm
+RUN apk add --no-cache --virtual .build-deps \
+    autoconf automake bash g++ gcc git libtool make openssl-dev python3
 
 COPY package.json package-lock.json* /opt/app/
 
-RUN npm ci
+# Production dependencies only, with lifecycle scripts disabled; node-rdkafka is
+# then rebuilt explicitly so its native bindings are compiled in this stage.
+RUN npm ci --omit=dev --ignore-scripts
+RUN npm rebuild node-rdkafka
 
-RUN apk del build-dependencies
+RUN apk del .build-deps
 
 COPY src /opt/app/src
 COPY config /opt/app/config
@@ -42,7 +44,6 @@ RUN adduser -D app-user
 USER app-user
 
 COPY --chown=app-user --from=builder /opt/app .
-RUN npm prune --production
 
 EXPOSE 3082
 CMD ["npm", "start"]
