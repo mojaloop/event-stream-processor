@@ -3,13 +3,13 @@
   // audit-ci supports reading JSON, JSONC, and JSON5 config files.
   // Only use one of ["low": true, "moderate": true, "high": true, "critical": true]
   "moderate": true,
-  "allowlist": [ // NOTE: Please add as much information as possible to any items added to the allowList
-    "GHSA-p9pc-299p-vxgp",
-    "GHSA-2g4f-4pwh-qvx6",
-    "GHSA-g8qq-57p8-ggw5",
-    "GHSA-vccv-cmxp-4j9h",
-    "GHSA-hp3w-g68c-fv3c",
-    "GHSA-4mjr-xmp4-gh2g",
-    "GHSA-x5fp-wj9c-mxmx"
+  "allowlist": [
+    // NOTE: Please add as much information as possible to any items added to the allowList
+    //
+    // GHSA-hp3w-g68c-fv3c - sprintf-js: DoS through unbounded precision specifiers.
+    // No patched release exists: the advisory covers "<= 1.1.3" and 1.1.3 is the newest
+    // version published. Reached only through faucet, a dev-only test reporter, so it is
+    // never on a runtime path. Remove once sprintf-js 1.1.4 or later ships.
+    "GHSA-hp3w-g68c-fv3c"
   ]
 }
