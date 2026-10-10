@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.0.2](https://github.com/mojaloop/event-stream-processor/compare/v12.0.1...v12.0.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* bump the qs and sanitize-html overrides instead of allowlisting their advisories ([9c775a9](https://github.com/mojaloop/event-stream-processor/commit/9c775a9cb6e159e39481985065835eed331a52de))
+* **security:** restore qs 6.16.0 and drop the allowlist entries it caused ([e459247](https://github.com/mojaloop/event-stream-processor/commit/e459247ee6f33ac3d4174d0e831b0cacdca2aa89))
+* **security:** update dependencies and overrides to resolve CI failures ([87fdf88](https://github.com/mojaloop/event-stream-processor/commit/87fdf8898507a7a84cf168bcfa7e558fe5fa2096))
+* undo two override downgrades and retire the vestigial suppressions ([62bfaab](https://github.com/mojaloop/event-stream-processor/commit/62bfaaba7a2c3ad4a16e2f2bf638f9d74b31141b))
+
 ### [12.0.1](https://github.com/mojaloop/event-stream-processor/compare/v12.0.0-snapshot.26...v12.0.1) (2026-03-31)
 
 
