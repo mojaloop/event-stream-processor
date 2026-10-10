@@ -132,7 +132,8 @@
     "joi": "18.2.9",
     "baseline-browser-mapping": "2.11.0",
     "follow-redirects": "1.16.0",
-    "@babel/core": "7.29.6"
+    "@babel/core": "7.29.6",
+    "handlebars": "4.7.10"
   },
   "standard-version": {
     "scripts": {
